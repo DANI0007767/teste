@@ -33,12 +33,10 @@ local function getClosestPlayer()
             local humanoid = player.Character:FindFirstChild("Humanoid")
             if not humanoid or humanoid.Health <= 0 then continue end
 
-            -- 2. Team Check (Filtragem de Time)
-            if player.Team then
-                local teamName = player.Team.Name
-                -- Se o time estiver marcado como TRUE na lista, o Aimbot dá 'continue' (pula o player)
-                if _G.AimbotHub.AllowedTeams[teamName] == true then
-                    continue
+            -- 2. Team Check Simplificado
+            if hub.TEAM_CHECK then
+                if player.Team == LP.Team then
+                    continue -- Se estiver no mesmo time que eu, pula ele (ignora)
                 end
             end
 
