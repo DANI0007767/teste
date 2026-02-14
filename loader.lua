@@ -1,6 +1,4 @@
---// SERVICES
-local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
+--// 1. CRIAR A TABELA GLOBAL PRIMEIRO (SEGURANÇA)
 _G.AimbotHub = {
 	-- Estado inicial
 	AIMBOT_ENABLED = false,
@@ -16,42 +14,26 @@ _G.AimbotHub = {
 	FOV = 250
 }
 
---// 1. CRIA A PONTE (COLA)
--- Exemplo: loadstring(game:HttpGet("https://raw.githubusercontent.com/usuario/repo/main/gui.lua"))()
--- Exemplo: loadstring(game:HttpGet("https://raw.githubusercontent.com/usuario/repo/main/logica.lua"))()
+--// SERVICES
+local Players = game:GetService("Players")
 
---// 2. PUXA AS PEÇAS (USANDO SEUS LINKS GITHUB)
-local GuiSuccess, GuiModule = pcall(function()
-	local guiCode = HttpService:GetAsync("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/gui.lua")
-	return loadstring(guiCode)()
-end)
+--// 2. CARREGAR MÓDULUS USANDO game:HttpGet (FUNCIONA EM EXECUTORES)
+local gui_code = game:HttpGet("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/gui.lua")
+task.wait(0.5) -- Intervalo para executores lentos
+local logic_code = game:HttpGet("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/logica.lua")
+task.wait(0.5) -- Intervalo para executores lentos
 
--- Carregar Lógica (Cérebro) 
-local LogicSuccess, LogicModule = pcall(function()
-	local logicCode = HttpService:GetAsync("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/logica.lua")
-	return loadstring(logicCode)()
-end)
+local GUI = loadstring(gui_code)()
+local Logic = loadstring(logic_code)()
 
---// 3. VERIFICA ERROS
-if not GuiSuccess then
-	warn("Erro ao carregar GUI:", GuiModule)
-	return
-end
-
-if not LogicSuccess then
-	warn("Erro ao carregar Lógica:", LogicModule)
-	return
-end
-
---// 4. CONECTA TUDO
-local GUI = GuiModule
-local Logic = LogicModule
+--// 3. CONECTAR E MOSTRAR (FORÇAR APARIÇÃO PARA TESTE)
+GUI.Main.Visible = true -- Janela visível imediatamente
 
 -- Sincronizar estado com a GUI
 _G.AimbotHub.GUI = GUI
 _G.AimbotHub.Logic = Logic
 
---// 5. EVENTOS DA GUI
+--// 4. EVENTOS DA GUI
 
 -- Toggle principal da janela
 GUI.ToggleBtn.MouseButton1Click:Connect(function()
@@ -245,11 +227,11 @@ loadTeams()
 GUI.enableDrag(GUI.Main)
 GUI.enableDrag(GUI.ToggleBtn)
 
---// 6. INICIAR SISTEMA
+--// 5. INICIAR SISTEMA
 print("🎯 Aimbot Hub carregado com sucesso!")
-print("📋 GUI: Carregada")
+print("📋 GUI: Carregada e visível")
 print("🧠 Lógica: Carregada")
 print("🔗 Estado: Conectado")
-
--- Estado já está sincronizado via eventos, não precisa de loop
 print("✅ Sistema pronto para uso!")
+
+-- Não precisa de loop, eventos cuidam de tudo
