@@ -24,6 +24,10 @@ local AIMBOT_SETTINGS = {
 --// FOV STATE
 local FOV_ENABLED = false
 
+--// TEAMS STATE
+local AllowedTeams = {}
+local TeamsOpen = false
+
 --// GUI ROOT
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MobileAimbotHub"
@@ -354,6 +358,192 @@ FovPlusBtn.MouseButton1Click:Connect(function()
 	FovValueLabel.Text = tostring(SilentRadius)
 end)
 
+--// TEAMS TAB FRAME
+local TeamsFrame = Instance.new("Frame")
+TeamsFrame.Size = UDim2.fromScale(0.9, 0.15)
+TeamsFrame.Position = UDim2.fromScale(0.05, 0.65)
+TeamsFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+TeamsFrame.Parent = Content
+TeamsFrame.ZIndex = 4
+
+Instance.new("UICorner", TeamsFrame).CornerRadius = UDim.new(0.2,0)
+
+-- BOTÃO DE EXPANDIR / RECOLHER
+local TeamsToggle = Instance.new("TextButton")
+TeamsToggle.Size = UDim2.fromScale(1,1)
+TeamsToggle.Text = "Teams ▼"
+TeamsToggle.TextScaled = true
+TeamsToggle.BackgroundTransparency = 1
+TeamsToggle.TextColor3 = Color3.new(1,1,1)
+TeamsToggle.Font = Enum.Font.GothamBold
+TeamsToggle.Parent = TeamsFrame
+TeamsToggle.ZIndex = 5
+
+-- BOTÕES SELECT ALL / CLEAR ALL
+local SelectAllBtn = Instance.new("TextButton")
+SelectAllBtn.Size = UDim2.fromScale(0.3, 0.6)
+SelectAllBtn.Position = UDim2.fromScale(0.02, 0.2)
+SelectAllBtn.Text = "✔ All"
+SelectAllBtn.TextScaled = true
+SelectAllBtn.BackgroundColor3 = Color3.fromRGB(40,120,40)
+SelectAllBtn.TextColor3 = Color3.new(1,1,1)
+SelectAllBtn.Font = Enum.Font.GothamBold
+SelectAllBtn.Parent = TeamsFrame
+SelectAllBtn.ZIndex = 5
+
+Instance.new("UICorner", SelectAllBtn).CornerRadius = UDim.new(0.3,0)
+
+local ClearAllBtn = Instance.new("TextButton")
+ClearAllBtn.Size = UDim2.fromScale(0.3, 0.6)
+ClearAllBtn.Position = UDim2.fromScale(0.35, 0.2)
+ClearAllBtn.Text = "❌ All"
+ClearAllBtn.TextScaled = true
+ClearAllBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
+ClearAllBtn.TextColor3 = Color3.new(1,1,1)
+ClearAllBtn.Font = Enum.Font.GothamBold
+ClearAllBtn.Parent = TeamsFrame
+ClearAllBtn.ZIndex = 5
+
+Instance.new("UICorner", ClearAllBtn).CornerRadius = UDim.new(0.3,0)
+
+-- CONTAINER DOS TIMES (DROPDOWN)
+local TeamsList = Instance.new("Frame")
+TeamsList.Size = UDim2.fromScale(1, 0)
+TeamsList.Position = UDim2.fromScale(0,1)
+TeamsList.BackgroundColor3 = Color3.fromRGB(25,25,25)
+TeamsList.Parent = TeamsFrame
+TeamsList.ClipsDescendants = true
+TeamsList.ZIndex = 4
+
+Instance.new("UICorner", TeamsList).CornerRadius = UDim.new(0.15,0)
+
+local ListLayout = Instance.new("UIListLayout", TeamsList)
+ListLayout.Padding = UDim.new(0,6)
+
+-- FUNÇÃO PRA CRIAR UM TIME (VISUAL)
+local function createTeamOption(teamName)
+	local Option = Instance.new("Frame")
+	Option.Size = UDim2.fromScale(1, 0.25)
+	Option.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	Option.Parent = TeamsList
+
+	Instance.new("UICorner", Option).CornerRadius = UDim.new(0.3,0)
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.fromScale(0.7,1)
+	Label.Text = teamName
+	Label.TextScaled = true
+	Label.BackgroundTransparency = 1
+	Label.TextColor3 = Color3.new(1,1,1)
+	Label.Font = Enum.Font.Gotham
+	Label.Parent = Option
+
+	local Check = Instance.new("TextButton")
+	Check.Size = UDim2.fromScale(0.2,0.6)
+	Check.Position = UDim2.fromScale(0.75,0.2)
+	Check.Text = "OFF"
+	Check.TextScaled = true
+	Check.BackgroundColor3 = Color3.fromRGB(120,40,40)
+	Check.TextColor3 = Color3.new(1,1,1)
+	Check.Font = Enum.Font.GothamBold
+	Check.Parent = Option
+
+	Instance.new("UICorner", Check).CornerRadius = UDim.new(1,0)
+
+	return Check
+end
+
+-- ANIMAÇÃO DE ABRIR / FECHAR ABA
+TeamsToggle.MouseButton1Click:Connect(function()
+	TeamsOpen = not TeamsOpen
+	TeamsToggle.Text = TeamsOpen and "Teams ▲" or "Teams ▼"
+	
+	-- Calcular altura baseada no número de times
+	local teamCount = 0
+	for _ in pairs(AllowedTeams) do
+		teamCount = teamCount + 1
+	end
+	
+	local maxHeight = math.min(teamCount * 0.3, 2.0) -- máximo 200% da altura do frame pai
+	
+	TeamsList:TweenSize(
+		TeamsOpen and UDim2.fromScale(1, maxHeight) or UDim2.fromScale(1, 0),
+		Enum.EasingDirection.Out,
+		Enum.EasingStyle.Quad,
+		0.25,
+		true
+	)
+end)
+
+--// CARREGAR TIMES DO JOGO
+local function loadTeams()
+	-- Limpar times existentes
+	for _, child in pairs(TeamsList:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+	
+	-- Coletar times únicos
+	local foundTeams = {}
+	for _, player in pairs(Players:GetPlayers()) do
+		if player.Team then
+			local teamName = player.Team.Name
+			if not AllowedTeams[teamName] then
+				AllowedTeams[teamName] = false -- começa desligado
+			end
+			foundTeams[teamName] = true
+		end
+	end
+	
+	-- Criar opções de times
+	local teamButtons = {}
+	for teamName, _ in pairs(foundTeams) do
+		local checkButton = createTeamOption(teamName)
+		teamButtons[teamName] = checkButton
+		
+		checkButton.MouseButton1Click:Connect(function()
+			AllowedTeams[teamName] = not AllowedTeams[teamName]
+			
+			if AllowedTeams[teamName] then
+				checkButton.Text = "ON"
+				checkButton.BackgroundColor3 = Color3.fromRGB(40,120,40)
+			else
+				checkButton.Text = "OFF"
+				checkButton.BackgroundColor3 = Color3.fromRGB(120,40,40)
+			end
+		end)
+		
+		-- Atualizar estado inicial
+		if AllowedTeams[teamName] then
+			checkButton.Text = "ON"
+			checkButton.BackgroundColor3 = Color3.fromRGB(40,120,40)
+		end
+	end
+end
+
+-- Conectar botões Select/Clear All fora do loadTeams (evita duplicação)
+SelectAllBtn.MouseButton1Click:Connect(function()
+	for teamName, _ in pairs(AllowedTeams) do
+		AllowedTeams[teamName] = true
+	end
+	loadTeams() -- recarrega para atualizar interface
+end)
+
+ClearAllBtn.MouseButton1Click:Connect(function()
+	for teamName, _ in pairs(AllowedTeams) do
+		AllowedTeams[teamName] = false
+	end
+	loadTeams() -- recarrega para atualizar interface
+end)
+
+-- Carregar times quando um jogador entra
+Players.PlayerAdded:Connect(loadTeams)
+Players.PlayerRemoving:Connect(loadTeams)
+
+-- Carregar times iniciais
+loadTeams()
+
 --// TOGGLE MAIN WINDOW
 ToggleBtn.MouseButton1Click:Connect(function()
 	Main.Visible = not Main.Visible
@@ -403,8 +593,16 @@ local function getClosestPlayer()
 	
 	for _, player in pairs(Players:GetPlayers()) do
 		if player ~= LP and player.Character and player.Character:FindFirstChild(AIMBOT_SETTINGS.TARGET_PART) then
-			-- Team check
-			if AIMBOT_SETTINGS.TEAM_CHECK and player.Team and player.Team == LP.Team then
+			-- Team check com AllowedTeams
+			local hasAnyTeamEnabled = false
+			for _, enabled in pairs(AllowedTeams) do
+				if enabled then
+					hasAnyTeamEnabled = true
+					break
+				end
+			end
+			
+			if hasAnyTeamEnabled and player.Team and not AllowedTeams[player.Team.Name] then
 				continue
 			end
 			
@@ -418,7 +616,7 @@ local function getClosestPlayer()
 			if AIMBOT_SETTINGS.WALL_CHECK then
 				local targetPart = player.Character[AIMBOT_SETTINGS.TARGET_PART]
 				local rayOrigin = Camera.CFrame.Position
-				local rayDirection = (targetPart.Position - rayOrigin).Unit * 1000
+				local rayDirection = (targetPart.Position - rayOrigin)
 				
 				local params = RaycastParams.new()
 				params.FilterType = Enum.RaycastFilterType.Exclude
