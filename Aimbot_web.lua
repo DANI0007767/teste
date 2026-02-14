@@ -22,6 +22,7 @@ ToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
 ToggleBtn.TextColor3 = Color3.new(1,1,1)
 ToggleBtn.Parent = ScreenGui
 ToggleBtn.Active = true
+ToggleBtn.ZIndex = 10
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0.4,0)
 
@@ -33,6 +34,7 @@ Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
 Main.Visible = false
 Main.Parent = ScreenGui
 Main.Active = true
+Main.ZIndex = 2
 
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0.03,0)
 
@@ -47,11 +49,12 @@ Header.Size = UDim2.fromScale(1, 0.12)
 Header.BackgroundColor3 = Color3.fromRGB(28,28,28)
 Header.Parent = Main
 Header.Active = true
+Header.ZIndex = 3
 
 Instance.new("UICorner", Header).CornerRadius = UDim.new(0.03,0)
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.fromScale(0.8,1)
+Title.Size = UDim2.fromScale(0.75,1)
 Title.Position = UDim2.fromScale(0.05,0)
 Title.Text = "Aimbot Hub"
 Title.TextScaled = true
@@ -59,6 +62,7 @@ Title.BackgroundTransparency = 1
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamBold
 Title.Parent = Header
+Title.ZIndex = 4
 
 --// MINIMIZE BUTTON
 local MinBtn = Instance.new("TextButton")
@@ -69,6 +73,7 @@ MinBtn.TextScaled = true
 MinBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
 MinBtn.TextColor3 = Color3.new(1,1,1)
 MinBtn.Parent = Header
+MinBtn.ZIndex = 4
 
 Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0.3,0)
 
@@ -82,13 +87,15 @@ Content.Position = UDim2.fromScale(0,0.12)
 Content.Size = UDim2.fromScale(1,0.88)
 Content.BackgroundTransparency = 1
 Content.Parent = Main
+Content.ZIndex = 3
 
---// AIMBOT TOGGLE
+--// AIMBOT TOGGLE FRAME
 local AimbotFrame = Instance.new("Frame")
 AimbotFrame.Size = UDim2.fromScale(0.9, 0.15)
 AimbotFrame.Position = UDim2.fromScale(0.05, 0.05)
 AimbotFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 AimbotFrame.Parent = Content
+AimbotFrame.ZIndex = 4
 
 Instance.new("UICorner", AimbotFrame).CornerRadius = UDim.new(0.2,0)
 
@@ -100,6 +107,7 @@ AimbotLabel.BackgroundTransparency = 1
 AimbotLabel.TextColor3 = Color3.new(1,1,1)
 AimbotLabel.Font = Enum.Font.Gotham
 AimbotLabel.Parent = AimbotFrame
+AimbotLabel.ZIndex = 5
 
 local Switch = Instance.new("TextButton")
 Switch.Size = UDim2.fromScale(0.25,0.6)
@@ -110,6 +118,7 @@ Switch.BackgroundColor3 = Color3.fromRGB(120,40,40)
 Switch.TextColor3 = Color3.new(1,1,1)
 Switch.Font = Enum.Font.GothamBold
 Switch.Parent = AimbotFrame
+Switch.ZIndex = 5
 
 Instance.new("UICorner", Switch).CornerRadius = UDim.new(1,0)
 
