@@ -300,18 +300,22 @@ ClearAllBtn.ZIndex = 5
 
 Instance.new("UICorner", ClearAllBtn).CornerRadius = UDim.new(0.3,0)
 
-local TeamsList = Instance.new("Frame")
+local TeamsList = Instance.new("ScrollingFrame")
 TeamsList.Size = UDim2.fromScale(1, 0)
 TeamsList.Position = UDim2.fromScale(0,1)
 TeamsList.BackgroundColor3 = Color3.fromRGB(25,25,25)
 TeamsList.Parent = TeamsFrame
 TeamsList.ClipsDescendants = true
 TeamsList.ZIndex = 4
+TeamsList.CanvasSize = UDim2.new(0, 0, 0, 500) -- Altura máxima para rolagem
+TeamsList.ScrollBarThickness = 2 -- Barra de rolagem visível
 
 Instance.new("UICorner", TeamsList).CornerRadius = UDim.new(0.15,0)
 
 local ListLayout = Instance.new("UIListLayout", TeamsList)
-ListLayout.Padding = UDim.new(0,6)
+ListLayout.Padding = UDim.new(0, 5) -- Espaço entre cada time
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 --// SILENT CIRCLE SETUP
 local SilentRadius = 200
