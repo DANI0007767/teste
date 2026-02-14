@@ -1,10 +1,25 @@
 --// SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
 
+--// CAMERA SETUP
+local Camera = workspace.CurrentCamera
+while not Camera do
+	task.wait()
+	Camera = workspace.CurrentCamera
+end
+
 --// GLOBAL STATE
-getgenv().AIMBOT_ENABLED = false
+local AIMBOT_ENABLED = false
+local AIMBOT_SETTINGS = {
+	FOV = 250,
+	SMOOTHNESS = 0.15,
+	TARGET_PART = "Head",
+	TEAM_CHECK = true,
+	WALL_CHECK = false
+}
 
 --// GUI ROOT
 local ScreenGui = Instance.new("ScreenGui")
@@ -122,18 +137,6 @@ Switch.ZIndex = 5
 
 Instance.new("UICorner", Switch).CornerRadius = UDim.new(1,0)
 
-Switch.MouseButton1Click:Connect(function()
-	AIMBOT_ENABLED = not AIMBOT_ENABLED
-
-	if AIMBOT_ENABLED then
-		Switch.Text = "ON"
-		Switch.BackgroundColor3 = Color3.fromRGB(40,120,40)
-	else
-		Switch.Text = "OFF"
-		Switch.BackgroundColor3 = Color3.fromRGB(120,40,40)
-	end
-end)
-
 --// TOGGLE MAIN WINDOW
 ToggleBtn.MouseButton1Click:Connect(function()
 	Main.Visible = not Main.Visible
@@ -175,3 +178,99 @@ end
 
 enableDrag(Main)
 enableDrag(ToggleBtn)
+
+--// AIMBOT FUNCTIONS
+local function getClosestPlayer()
+	local closestPlayer = nil
+	local closestDistance = math.huge
+	
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LP and player.Character and player.Character:FindFirstChild(AIMBOT_SETTINGS.TARGET_PART) then
+			-- Team check
+			if AIMBOT_SETTINGS.TEAM_CHECK and player.Team and player.Team == LP.Team then
+				continue
+			end
+			
+			-- Verificar se alvo está vivo
+			local targetHumanoid = player.Character:FindFirstChild("Humanoid")
+			if not targetHumanoid or targetHumanoid.Health <= 0 then
+				continue
+			end
+			
+			local targetPart = player.Character[AIMBOT_SETTINGS.TARGET_PART]
+			local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+			
+			if not onScreen then continue end
+			
+			local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+			
+			if distance < closestDistance and distance <= AIMBOT_SETTINGS.FOV then
+				closestDistance = distance
+				closestPlayer = player
+			end
+		end
+	end
+	
+	return closestPlayer
+end
+
+local function aimAtTarget(target)
+	if not target or not target.Character then return end
+	
+	local targetPart = target.Character:FindFirstChild(AIMBOT_SETTINGS.TARGET_PART)
+	if not targetPart then return end
+	
+	local camera = Camera
+	local currentCFrame = camera.CFrame
+	local targetCFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
+	
+	-- Smooth aim com verificação adicional
+	if AIMBOT_SETTINGS.SMOOTHNESS >= 1 then
+		camera.CFrame = targetCFrame
+	else
+		camera.CFrame = currentCFrame:Lerp(targetCFrame, AIMBOT_SETTINGS.SMOOTHNESS)
+	end
+end
+
+--// AIMBOT LOOP
+local aimbotConnection
+local function startAimbot()
+	if aimbotConnection then
+		aimbotConnection:Disconnect()
+	end
+
+	aimbotConnection = RunService.RenderStepped:Connect(function()
+		if not AIMBOT_ENABLED then return end
+		if not LP.Character then return end
+
+		local humanoid = LP.Character:FindFirstChild("Humanoid")
+		if not humanoid or humanoid.Health <= 0 then return end
+
+		local target = getClosestPlayer()
+		if target then
+			aimAtTarget(target)
+		end
+	end)
+end
+
+local function stopAimbot()
+	if aimbotConnection then
+		aimbotConnection:Disconnect()
+		aimbotConnection = nil
+	end
+end
+
+--// UPDATE TOGGLE FUNCTION
+Switch.MouseButton1Click:Connect(function()
+	AIMBOT_ENABLED = not AIMBOT_ENABLED
+
+	if AIMBOT_ENABLED then
+		Switch.Text = "ON"
+		Switch.BackgroundColor3 = Color3.fromRGB(40,120,40)
+		startAimbot()
+	else
+		Switch.Text = "OFF"
+		Switch.BackgroundColor3 = Color3.fromRGB(120,40,40)
+		stopAimbot()
+	end
+end)
