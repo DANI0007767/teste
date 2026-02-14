@@ -1,6 +1,6 @@
 --// SERVICES
 local Players = game:GetService("Players")
-local _HttpService = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 _G.AimbotHub = {
 	-- Estado inicial
 	AIMBOT_ENABLED = false,
@@ -20,16 +20,16 @@ _G.AimbotHub = {
 -- Exemplo: loadstring(game:HttpGet("https://raw.githubusercontent.com/usuario/repo/main/gui.lua"))()
 -- Exemplo: loadstring(game:HttpGet("https://raw.githubusercontent.com/usuario/repo/main/logica.lua"))()
 
---// 2. PUXA AS PEÇAS (SUBSTITUA PELOS SEUS LINKS GITHUB)
+--// 2. PUXA AS PEÇAS (USANDO SEUS LINKS GITHUB)
 local GuiSuccess, GuiModule = pcall(function()
-	-- return loadstring(game:HttpGet("https://raw.githubusercontent.com/seu-usuario/seu-repo/main/gui.lua"))()
-	return require(script.Parent:WaitForChild("gui")) -- Para teste local
+	local guiCode = HttpService:GetAsync("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/gui.lua")
+	return loadstring(guiCode)()
 end)
 
--- Carregar GUI (Visual) - Para teste local, carregar diretamente
+-- Carregar Lógica (Cérebro) 
 local LogicSuccess, LogicModule = pcall(function()
-	-- return loadstring(game:HttpGet("https://raw.githubusercontent.com/seu-usuario/seu-repo/main/logica.lua"))()
-	return require(script.Parent:WaitForChild("logica")) -- Para teste local
+	local logicCode = HttpService:GetAsync("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/logica.lua")
+	return loadstring(logicCode)()
 end)
 
 --// 3. VERIFICA ERROS
