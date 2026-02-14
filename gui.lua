@@ -266,56 +266,13 @@ Instance.new("UICorner", TeamsFrame).CornerRadius = UDim.new(0.2,0)
 
 local TeamsToggle = Instance.new("TextButton")
 TeamsToggle.Size = UDim2.fromScale(1,1)
-TeamsToggle.Text = "Teams ▼"
+TeamsToggle.Text = "Team Check: OFF"
 TeamsToggle.TextScaled = true
 TeamsToggle.BackgroundTransparency = 1
 TeamsToggle.TextColor3 = Color3.new(1,1,1)
 TeamsToggle.Font = Enum.Font.GothamBold
 TeamsToggle.Parent = TeamsFrame
 TeamsToggle.ZIndex = 5
-
-local SelectAllBtn = Instance.new("TextButton")
-SelectAllBtn.Size = UDim2.fromScale(0.3, 0.6)
-SelectAllBtn.Position = UDim2.fromScale(0.02, 0.2)
-SelectAllBtn.Text = "✔ All"
-SelectAllBtn.TextScaled = true
-SelectAllBtn.BackgroundColor3 = Color3.fromRGB(40,120,40)
-SelectAllBtn.TextColor3 = Color3.new(1,1,1)
-SelectAllBtn.Font = Enum.Font.GothamBold
-SelectAllBtn.Parent = TeamsFrame
-SelectAllBtn.ZIndex = 5
-
-Instance.new("UICorner", SelectAllBtn).CornerRadius = UDim.new(0.3,0)
-
-local ClearAllBtn = Instance.new("TextButton")
-ClearAllBtn.Size = UDim2.fromScale(0.3, 0.6)
-ClearAllBtn.Position = UDim2.fromScale(0.35, 0.2)
-ClearAllBtn.Text = "❌ All"
-ClearAllBtn.TextScaled = true
-ClearAllBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
-ClearAllBtn.TextColor3 = Color3.new(1,1,1)
-ClearAllBtn.Font = Enum.Font.GothamBold
-ClearAllBtn.Parent = TeamsFrame
-ClearAllBtn.ZIndex = 5
-
-Instance.new("UICorner", ClearAllBtn).CornerRadius = UDim.new(0.3,0)
-
-local TeamsList = Instance.new("ScrollingFrame")
-TeamsList.Size = UDim2.fromScale(1, 0)
-TeamsList.Position = UDim2.fromScale(0,1)
-TeamsList.BackgroundColor3 = Color3.fromRGB(25,25,25)
-TeamsList.Parent = TeamsFrame
-TeamsList.ClipsDescendants = true
-TeamsList.ZIndex = 4
-TeamsList.CanvasSize = UDim2.new(0, 0, 0, 500) -- Altura máxima para rolagem
-TeamsList.ScrollBarThickness = 2 -- Barra de rolagem visível
-
-Instance.new("UICorner", TeamsList).CornerRadius = UDim.new(0.15,0)
-
-local ListLayout = Instance.new("UIListLayout", TeamsList)
-ListLayout.Padding = UDim.new(0, 5) -- Espaço entre cada time
-ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 --// SILENT CIRCLE SETUP
 local SilentRadius = 200
@@ -387,9 +344,6 @@ return {
 	FovPlusBtn = FovPlusBtn,
 	FovValueLabel = FovValueLabel,
 	TeamsToggle = TeamsToggle,
-	SelectAllBtn = SelectAllBtn,
-	ClearAllBtn = ClearAllBtn,
-	TeamsList = TeamsList,
 	SilentCircle = SilentCircle,
 	enableDrag = enableDrag
 }
