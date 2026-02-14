@@ -1,147 +1,95 @@
+--// SERVICES
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
+local LP = Players.LocalPlayer
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+--// GUI ROOT
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MobileHub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LP:WaitForChild("PlayerGui")
 
-local AIMBOT_ENABLED = false
-local TEAMCHECK_ENABLED = true
+--// FLOATING TOGGLE BUTTON
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.fromScale(0.12, 0.08)
+ToggleBtn.Position = UDim2.fromScale(0.05, 0.45)
+ToggleBtn.Text = "≡"
+ToggleBtn.TextScaled = true
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.Parent = ScreenGui
 
--- Configurações para mira ultra grudada
-local SMOOTHNESS = 1        -- Mira gruda instantaneamente no alvo
-local AIMBOT_FOV = 250      -- Área grande para troca de alvo
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0.4,0)
 
-local screenGui
-local toggleButton
+--// MAIN WINDOW
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromScale(0.7, 0.6)
+Main.Position = UDim2.fromScale(0.15, 0.2)
+Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Main.Visible = false
+Main.Parent = ScreenGui
 
-local dragging = false
-local dragInput
-local dragStart
-local startPos
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0.03,0)
+Instance.new("UIStroke", Main).Thickness = 1.5
 
-local function isAlive(plr)
-    local char = plr.Character
-    if not char then return false end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
+--// HEADER
+local Header = Instance.new("Frame")
+Header.Size = UDim2.fromScale(1, 0.12)
+Header.BackgroundColor3 = Color3.fromRGB(28,28,28)
+Header.Parent = Main
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0.03,0)
 
-local function isVisible(part)
-    if not part then return false end
-    local origin = Camera.CFrame.Position
-    local direction = part.Position - origin
-    if direction.Magnitude == 0 then return true end
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.fromScale(1,1)
+Title.Text = "My Hub"
+Title.TextScaled = true
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Parent = Header
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+--// CONTENT
+local Content = Instance.new("Frame")
+Content.Position = UDim2.fromScale(0,0.12)
+Content.Size = UDim2.fromScale(1,0.88)
+Content.BackgroundTransparency = 1
+Content.Parent = Main
 
-    local raycastResult = Workspace:Raycast(origin, direction.Unit * math.min(direction.Magnitude, 1000), raycastParams)
-    if raycastResult then
-        return raycastResult.Instance:IsDescendantOf(part.Parent)
-    else
-        return true
-    end
-end
-
-local function getClosestEnemyToCenter()
-    local closest = nil
-    local shortestDist = AIMBOT_FOV -- Só considera se estiver dentro do FOV!
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and (not TEAMCHECK_ENABLED or plr.Team ~= LocalPlayer.Team) then
-            if isAlive(plr) and plr.Character and plr.Character:FindFirstChild("Head") then
-                local head = plr.Character.Head
-                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                if onScreen and isVisible(head) then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = head
-                    end
-                end
-            end
-        end
-    end
-    return closest
-end
-
-local function buildGUI()
-    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-    if screenGui then screenGui:Destroy() end
-
-    screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "AimbotToggleGUI"
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = playerGui
-
-    toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, 150, 0, 50)
-    toggleButton.Position = UDim2.new(1, -10, 0, 10)
-    toggleButton.AnchorPoint = Vector2.new(1, 0)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.Font = Enum.Font.SourceSansBold
-    toggleButton.TextSize = 18
-    toggleButton.Text = "Aimbot: OFF"
-    toggleButton.Parent = screenGui
-
-    -- Permitir arrastar sem redimensionar
-    toggleButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = toggleButton.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    toggleButton.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            toggleButton.Position = UDim2.new(
-                math.clamp(startPos.X.Scale + delta.X / Camera.ViewportSize.X, 0, 1),
-                startPos.X.Offset + delta.X,
-                math.clamp(startPos.Y.Scale + delta.Y / Camera.ViewportSize.Y, 0, 1),
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-
-    toggleButton.MouseButton1Click:Connect(function()
-        AIMBOT_ENABLED = not AIMBOT_ENABLED
-        toggleButton.Text = "Aimbot: " .. (AIMBOT_ENABLED and "ON" or "OFF")
-    end)
-end
-
-LocalPlayer.CharacterAdded:Connect(function()
-    buildGUI()
+--// TOGGLE OPEN/CLOSE
+ToggleBtn.MouseButton1Click:Connect(function()
+	Main.Visible = not Main.Visible
 end)
 
-buildGUI()
+--// DRAG SYSTEM (MOBILE + PC)
+local dragging, dragStart, startPos
 
-RunService.RenderStepped:Connect(function()
-    if AIMBOT_ENABLED then
-        local targetHead = getClosestEnemyToCenter()
-        if targetHead then
-            -- Mira ultra grudada: snap instantâneo para o alvo!
-            local currentCFrame = Camera.CFrame
-            local desiredCFrame = CFrame.new(currentCFrame.Position, targetHead.Position)
-            Camera.CFrame = currentCFrame:Lerp(desiredCFrame, SMOOTHNESS)
-        end
-    end
-end)
+local function enableDrag(frame)
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch 
+		or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.Touch 
+		or input.UserInputType == Enum.UserInputType.MouseMovement) then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch 
+		or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
+
+enableDrag(Main)
+enableDrag(ToggleBtn)
