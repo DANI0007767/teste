@@ -18,8 +18,11 @@ local AIMBOT_SETTINGS = {
 	SMOOTHNESS = 0.15,
 	TARGET_PART = "Head",
 	TEAM_CHECK = true,
-	WALL_CHECK = false
+	WALL_CHECK = true
 }
+
+--// FOV STATE
+local FOV_ENABLED = false
 
 --// GUI ROOT
 local ScreenGui = Instance.new("ScreenGui")
@@ -37,7 +40,7 @@ SilentCircle.AnchorPoint = Vector2.new(0.5, 0.5)
 SilentCircle.BackgroundTransparency = 1
 SilentCircle.Parent = ScreenGui
 SilentCircle.ZIndex = 1
-SilentCircle.Visible = true
+SilentCircle.Visible = false
 
 -- Deixar redondo
 local circleCorner = Instance.new("UICorner")
@@ -250,7 +253,7 @@ Instance.new("UICorner", FovFrame).CornerRadius = UDim.new(0.2,0)
 
 -- LABEL
 local FovLabel = Instance.new("TextLabel")
-FovLabel.Size = UDim2.fromScale(0.45,1)
+FovLabel.Size = UDim2.fromScale(0.25,1)
 FovLabel.Position = UDim2.fromScale(0.03,0)
 FovLabel.Text = "FOV Circle"
 FovLabel.TextScaled = true
@@ -260,10 +263,24 @@ FovLabel.Font = Enum.Font.Gotham
 FovLabel.Parent = FovFrame
 FovLabel.ZIndex = 5
 
+-- TOGGLE BUTTON
+local FovToggleBtn = Instance.new("TextButton")
+FovToggleBtn.Size = UDim2.fromScale(0.12, 0.6)
+FovToggleBtn.Position = UDim2.fromScale(0.32, 0.2)
+FovToggleBtn.Text = "OFF"
+FovToggleBtn.TextScaled = true
+FovToggleBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
+FovToggleBtn.TextColor3 = Color3.new(1,1,1)
+FovToggleBtn.Font = Enum.Font.GothamBold
+FovToggleBtn.Parent = FovFrame
+FovToggleBtn.ZIndex = 5
+
+Instance.new("UICorner", FovToggleBtn).CornerRadius = UDim.new(1,0)
+
 -- MINUS BUTTON
 local FovMinusBtn = Instance.new("TextButton")
-FovMinusBtn.Size = UDim2.fromScale(0.15,0.6)
-FovMinusBtn.Position = UDim2.fromScale(0.52,0.2)
+FovMinusBtn.Size = UDim2.fromScale(0.12,0.6)
+FovMinusBtn.Position = UDim2.fromScale(0.47,0.2)
 FovMinusBtn.Text = "-"
 FovMinusBtn.TextScaled = true
 FovMinusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
@@ -277,7 +294,7 @@ Instance.new("UICorner", FovMinusBtn).CornerRadius = UDim.new(1,0)
 -- VALUE DISPLAY
 local FovValueLabel = Instance.new("TextLabel")
 FovValueLabel.Size = UDim2.fromScale(0.12,0.6)
-FovValueLabel.Position = UDim2.fromScale(0.69,0.2)
+FovValueLabel.Position = UDim2.fromScale(0.62,0.2)
 FovValueLabel.Text = tostring(SilentRadius)
 FovValueLabel.TextScaled = true
 FovValueLabel.BackgroundColor3 = Color3.fromRGB(40,40,40)
@@ -290,8 +307,8 @@ Instance.new("UICorner", FovValueLabel).CornerRadius = UDim.new(1,0)
 
 -- PLUS BUTTON
 local FovPlusBtn = Instance.new("TextButton")
-FovPlusBtn.Size = UDim2.fromScale(0.15,0.6)
-FovPlusBtn.Position = UDim2.fromScale(0.83,0.2)
+FovPlusBtn.Size = UDim2.fromScale(0.12,0.6)
+FovPlusBtn.Position = UDim2.fromScale(0.77,0.2)
 FovPlusBtn.Text = "+"
 FovPlusBtn.TextScaled = true
 FovPlusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
@@ -303,17 +320,37 @@ FovPlusBtn.ZIndex = 5
 Instance.new("UICorner", FovPlusBtn).CornerRadius = UDim.new(1,0)
 
 --// FOV CIRCLE INTERAÇÃO
+FovToggleBtn.MouseButton1Click:Connect(function()
+	FOV_ENABLED = not FOV_ENABLED
+	
+	if FOV_ENABLED then
+		FovToggleBtn.Text = "ON"
+		FovToggleBtn.BackgroundColor3 = Color3.fromRGB(40,120,40)
+		SilentCircle.Visible = true
+		AIMBOT_SETTINGS.FOV = SilentRadius
+	else
+		FovToggleBtn.Text = "OFF"
+		FovToggleBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
+		SilentCircle.Visible = false
+		AIMBOT_SETTINGS.FOV = 0
+	end
+end)
+
 FovMinusBtn.MouseButton1Click:Connect(function()
 	SilentRadius = math.clamp(SilentRadius - 10, 50, 600)
 	SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
-	AIMBOT_SETTINGS.FOV = SilentRadius
+	if FOV_ENABLED then
+		AIMBOT_SETTINGS.FOV = SilentRadius
+	end
 	FovValueLabel.Text = tostring(SilentRadius)
 end)
 
 FovPlusBtn.MouseButton1Click:Connect(function()
 	SilentRadius = math.clamp(SilentRadius + 10, 50, 600)
 	SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
-	AIMBOT_SETTINGS.FOV = SilentRadius
+	if FOV_ENABLED then
+		AIMBOT_SETTINGS.FOV = SilentRadius
+	end
 	FovValueLabel.Text = tostring(SilentRadius)
 end)
 
@@ -375,6 +412,23 @@ local function getClosestPlayer()
 			local targetHumanoid = player.Character:FindFirstChild("Humanoid")
 			if not targetHumanoid or targetHumanoid.Health <= 0 then
 				continue
+			end
+			
+			-- Wall check
+			if AIMBOT_SETTINGS.WALL_CHECK then
+				local targetPart = player.Character[AIMBOT_SETTINGS.TARGET_PART]
+				local rayOrigin = Camera.CFrame.Position
+				local rayDirection = (targetPart.Position - rayOrigin).Unit * 1000
+				
+				local params = RaycastParams.new()
+				params.FilterType = Enum.RaycastFilterType.Exclude
+				params.FilterDescendantsInstances = {LP.Character}
+				
+				local raycastResult = workspace:Raycast(rayOrigin, rayDirection, params)
+				
+				if raycastResult and not raycastResult.Instance:IsDescendantOf(player.Character) then
+					continue
+				end
 			end
 			
 			local targetPart = player.Character[AIMBOT_SETTINGS.TARGET_PART]
