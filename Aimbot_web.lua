@@ -1,5 +1,6 @@
--- Advanced Hack Interface for Roblox
+-- ⚡ Advanced Hack UI for Roblox - Web Version
 -- Modern UI with mobile support and expandable modules
+-- Load with: loadstring(game:HttpGet("https://raw.githubusercontent.com/DANI0007767/teste/refs/heads/main/Aimbot_web.lua"))()
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -40,7 +41,7 @@ local COLORS = {
 }
 
 -- Mobile Detection
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local isMobile = UserInputService.TouchEnabled
 
 -- Utility Functions
 local function createTween(obj, info, goal)
@@ -54,9 +55,8 @@ end
 -- Dragging System (Mobile & Desktop Compatible)
 local function setupDragging(frame)
     frame.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or 
-            input.UserInputType == Enum.UserInputType.Touch) and 
-            not (isMobile and input.UserInputType == Enum.UserInputType.MouseButton1) then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
             
             isDragging = true
             dragStart = input.Position
@@ -156,12 +156,13 @@ local function createToggle(name, defaultValue, parent)
     label.TextSize = isMobile and 12 or 14
     label.Parent = container
     
-    local toggleFrame = Instance.new("Frame")
+    local toggleFrame = Instance.new("TextButton")
     toggleFrame.Name = "ToggleFrame"
     toggleFrame.Size = UDim2.new(0, 40, 0, 20)
     toggleFrame.Position = UDim2.new(1, -40, 0.5, -10)
     toggleFrame.BackgroundColor3 = COLORS.SECONDARY
     toggleFrame.BorderSizePixel = 0
+    toggleFrame.Text = ""
     toggleFrame.Parent = container
     
     local toggleButton = Instance.new("Frame")
@@ -209,11 +210,8 @@ local function createToggle(name, defaultValue, parent)
     end
     
     -- Input handling
-    if isMobile then
-        toggleFrame.TouchTap:Connect(toggle)
-    else
-        toggleFrame.MouseButton1Click:Connect(toggle)
-    end
+    toggleFrame.MouseButton1Click:Connect(toggle)
+    toggleFrame.TouchTap:Connect(toggle)
     
     updateVisual()
     
@@ -274,7 +272,7 @@ local function createAimbotModule(parent)
     settingsLabel.Size = UDim2.new(1, 0, 0, 20)
     settingsLabel.Position = UDim2.new(0, 0, 0, 90)
     settingsLabel.BackgroundTransparency = 1
-    settingsLabel.Text = "Configurações:"
+    settingsLabel.Text = "Configurações: FOV=250, Smooth=1"
     settingsLabel.TextColor3 = COLORS.TEXT_MUTED
     settingsLabel.Font = isMobile and Enum.Font.SourceSans or Enum.Font.Gotham
     settingsLabel.TextSize = isMobile and 11 or 12
@@ -491,7 +489,7 @@ local function createMainUI()
     setupDragging(headerFrame)
     
     -- Minimize functionality
-    minimizeButton.MouseButton1Click:Connect(function()
+    local function toggleMinimize()
         isMinimized = not isMinimized
         
         if isMinimized then
@@ -511,14 +509,17 @@ local function createMainUI()
                 Size = UDim2.new(0, isMobile and 300 or 350, 0, 400)
             }):Play()
         end
-    end)
+    end
+    
+    minimizeButton.MouseButton1Click:Connect(toggleMinimize)
+    minimizeButton.TouchTap:Connect(toggleMinimize)
     
     -- Add Aimbot Module
     local aimbotModule = createAimbotModule(contentFrame)
     aimbotModule.LayoutOrder = 1
     
     -- Update content size
-    contentFrame.CanvasSize = UDim2.new(0, 0, 1, contentLayout.AbsoluteContentSize.Y + 20)
+    contentFrame.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 20)
 end
 
 -- Initialize
@@ -535,3 +536,7 @@ game:GetService("Workspace").ChildAdded:Connect(function()
         contentFrame.CanvasSize = UDim2.new(0, 0, 1, layout.AbsoluteContentSize.Y + 20)
     end
 end)
+
+print("⚡ Advanced Hack UI Loaded Successfully!")
+print("🎯 Aimbot ready to use!")
+print("📱 Mobile compatible!")
