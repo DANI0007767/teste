@@ -33,14 +33,13 @@ local function getClosestPlayer()
             local humanoid = player.Character:FindFirstChild("Humanoid")
             if not humanoid or humanoid.Health <= 0 then continue end
 
-            -- 2. Team Check (Baseado na sua lista de times permitidos)
-            local hasAnyTeamEnabled = false
-            for _, enabled in pairs(hub.AllowedTeams) do
-                if enabled then hasAnyTeamEnabled = true; break end
-            end
-
-            if hasAnyTeamEnabled and player.Team and not hub.AllowedTeams[player.Team.Name] then
-                continue
+            -- 2. Team Check (Filtragem de Time)
+            if player.Team then
+                local teamName = player.Team.Name
+                -- Se o time estiver marcado como TRUE na lista, o Aimbot dá 'continue' (pula o player)
+                if _G.AimbotHub.AllowedTeams[teamName] == true then
+                    continue
+                end
             end
 
             -- 3. Wall Check (Verificar se há paredes no caminho)
