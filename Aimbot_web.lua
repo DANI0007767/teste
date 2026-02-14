@@ -27,6 +27,30 @@ ScreenGui.Name = "MobileAimbotHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LP:WaitForChild("PlayerGui")
 
+--// SILENT CIRCLE SETUP
+local SilentRadius = 200
+local SilentCircle = Instance.new("Frame")
+SilentCircle.Name = "SilentCircle"
+SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
+SilentCircle.Position = UDim2.fromScale(0.5, 0.5)
+SilentCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+SilentCircle.BackgroundTransparency = 1
+SilentCircle.Parent = ScreenGui
+SilentCircle.ZIndex = 1
+SilentCircle.Visible = true
+
+-- Deixar redondo
+local circleCorner = Instance.new("UICorner")
+circleCorner.CornerRadius = UDim.new(1, 0)
+circleCorner.Parent = SilentCircle
+
+-- Contorno bonito
+local circleStroke = Instance.new("UIStroke")
+circleStroke.Thickness = 2
+circleStroke.Color = Color3.fromRGB(0, 170, 255)
+circleStroke.Transparency = 0.2
+circleStroke.Parent = SilentCircle
+
 --// FLOATING TOGGLE BUTTON
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.fromScale(0.12, 0.08)
@@ -212,6 +236,85 @@ end)
 PlusBtn.MouseButton1Click:Connect(function()
 	AimForce = math.clamp(AimForce + 1, 1, 100)
 	ValueLabel.Text = tostring(AimForce)
+end)
+
+--// FOV CIRCLE CONTROL
+local FovFrame = Instance.new("Frame")
+FovFrame.Size = UDim2.fromScale(0.9, 0.15)
+FovFrame.Position = UDim2.fromScale(0.05, 0.45)
+FovFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+FovFrame.Parent = Content
+FovFrame.ZIndex = 4
+
+Instance.new("UICorner", FovFrame).CornerRadius = UDim.new(0.2,0)
+
+-- LABEL
+local FovLabel = Instance.new("TextLabel")
+FovLabel.Size = UDim2.fromScale(0.45,1)
+FovLabel.Position = UDim2.fromScale(0.03,0)
+FovLabel.Text = "FOV Circle"
+FovLabel.TextScaled = true
+FovLabel.BackgroundTransparency = 1
+FovLabel.TextColor3 = Color3.new(1,1,1)
+FovLabel.Font = Enum.Font.Gotham
+FovLabel.Parent = FovFrame
+FovLabel.ZIndex = 5
+
+-- MINUS BUTTON
+local FovMinusBtn = Instance.new("TextButton")
+FovMinusBtn.Size = UDim2.fromScale(0.15,0.6)
+FovMinusBtn.Position = UDim2.fromScale(0.52,0.2)
+FovMinusBtn.Text = "-"
+FovMinusBtn.TextScaled = true
+FovMinusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+FovMinusBtn.TextColor3 = Color3.new(1,1,1)
+FovMinusBtn.Font = Enum.Font.GothamBold
+FovMinusBtn.Parent = FovFrame
+FovMinusBtn.ZIndex = 5
+
+Instance.new("UICorner", FovMinusBtn).CornerRadius = UDim.new(1,0)
+
+-- VALUE DISPLAY
+local FovValueLabel = Instance.new("TextLabel")
+FovValueLabel.Size = UDim2.fromScale(0.12,0.6)
+FovValueLabel.Position = UDim2.fromScale(0.69,0.2)
+FovValueLabel.Text = tostring(SilentRadius)
+FovValueLabel.TextScaled = true
+FovValueLabel.BackgroundColor3 = Color3.fromRGB(40,40,40)
+FovValueLabel.TextColor3 = Color3.new(1,1,1)
+FovValueLabel.Font = Enum.Font.GothamBold
+FovValueLabel.Parent = FovFrame
+FovValueLabel.ZIndex = 5
+
+Instance.new("UICorner", FovValueLabel).CornerRadius = UDim.new(1,0)
+
+-- PLUS BUTTON
+local FovPlusBtn = Instance.new("TextButton")
+FovPlusBtn.Size = UDim2.fromScale(0.15,0.6)
+FovPlusBtn.Position = UDim2.fromScale(0.83,0.2)
+FovPlusBtn.Text = "+"
+FovPlusBtn.TextScaled = true
+FovPlusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+FovPlusBtn.TextColor3 = Color3.new(1,1,1)
+FovPlusBtn.Font = Enum.Font.GothamBold
+FovPlusBtn.Parent = FovFrame
+FovPlusBtn.ZIndex = 5
+
+Instance.new("UICorner", FovPlusBtn).CornerRadius = UDim.new(1,0)
+
+--// FOV CIRCLE INTERAÇÃO
+FovMinusBtn.MouseButton1Click:Connect(function()
+	SilentRadius = math.clamp(SilentRadius - 10, 50, 600)
+	SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
+	AIMBOT_SETTINGS.FOV = SilentRadius
+	FovValueLabel.Text = tostring(SilentRadius)
+end)
+
+FovPlusBtn.MouseButton1Click:Connect(function()
+	SilentRadius = math.clamp(SilentRadius + 10, 50, 600)
+	SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
+	AIMBOT_SETTINGS.FOV = SilentRadius
+	FovValueLabel.Text = tostring(SilentRadius)
 end)
 
 --// TOGGLE MAIN WINDOW
