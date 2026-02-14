@@ -109,92 +109,53 @@ GUI.FovPlusBtn.MouseButton1Click:Connect(function()
 	GUI.FovValueLabel.Text = tostring(SilentRadius)
 end)
 
--- Sistema de Teams
+-- Sistema de Ignore Teams (Melhorado)
 local function loadTeams()
-	-- Limpar times existentes
-	for _, child in pairs(GUI.TeamsList:GetChildren()) do
-		if child:IsA("Frame") then
-			child:Destroy()
-		end
-	end
-	
-	-- Coletar times únicos
-	local foundTeams = {}
-	for _, player in pairs(Players:GetPlayers()) do
-		if player.Team then
-			local teamName = player.Team.Name
-			if not _G.AimbotHub.AllowedTeams[teamName] then
-				_G.AimbotHub.AllowedTeams[teamName] = false
-			end
-			foundTeams[teamName] = true
-		end
-	end
-	
-	-- Criar opções de times
-	local teamButtons = {}
-	for teamName, _ in pairs(foundTeams) do
-		local Option = Instance.new("Frame")
-		Option.Size = UDim2.fromScale(1, 0.25)
-		Option.BackgroundColor3 = Color3.fromRGB(35,35,35)
-		Option.Parent = GUI.TeamsList
+    -- Limpar lista atual
+    for _, child in pairs(GUI.TeamsList:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
 
-		Instance.new("UICorner", Option).CornerRadius = UDim.new(0.3,0)
+    -- Pegar os times reais do jogo
+    local TeamsService = game:GetService("Teams")
+    local allTeams = TeamsService:GetTeams()
 
-		local Label = Instance.new("TextLabel")
-		Label.Size = UDim2.fromScale(0.7,1)
-		Label.Text = teamName
-		Label.TextScaled = true
-		Label.BackgroundTransparency = 1
-		Label.TextColor3 = Color3.new(1,1,1)
-		Label.Font = Enum.Font.Gotham
-		Label.Parent = Option
+    for _, team in pairs(allTeams) do
+        local teamName = team.Name
+        
+        -- Criar o layout do time na lista
+        local Option = Instance.new("Frame")
+        Option.Size = UDim2.new(1, -10, 0, 35) -- Tamanho fixo para cada linha
+        Option.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        Option.Parent = GUI.TeamsList
+        Instance.new("UICorner", Option).CornerRadius = UDim.new(0, 5)
 
-		local Check = Instance.new("TextButton")
-		Check.Size = UDim2.fromScale(0.2,0.6)
-		Check.Position = UDim2.fromScale(0.75,0.2)
-		Check.Text = "OFF"
-		Check.TextScaled = true
-		Check.BackgroundColor3 = Color3.fromRGB(120,40,40)
-		Check.TextColor3 = Color3.new(1,1,1)
-		Check.Font = Enum.Font.GothamBold
-		Check.Parent = Option
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.fromScale(0.7, 1)
+        Label.Position = UDim2.fromScale(0.05, 0)
+        Label.Text = teamName
+        Label.TextColor3 = team.TeamColor.Color -- Usa a cor real do time no texto
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.BackgroundTransparency = 1
+        Label.Font = Enum.Font.Gotham
+        Label.TextScaled = true
+        Label.Parent = Option
 
-		Instance.new("UICorner", Check).CornerRadius = UDim.new(1,0)
-		
-		teamButtons[teamName] = Check
-		
-		Check.MouseButton1Click:Connect(function()
-			_G.AimbotHub.AllowedTeams[teamName] = not _G.AimbotHub.AllowedTeams[teamName]
-			
-			if _G.AimbotHub.AllowedTeams[teamName] then
-				Check.Text = "ON"
-				Check.BackgroundColor3 = Color3.fromRGB(40,120,40)
-			else
-				Check.Text = "OFF"
-				Check.BackgroundColor3 = Color3.fromRGB(120,40,40)
-			end
-		end)
-		
-		if _G.AimbotHub.AllowedTeams[teamName] then
-			Check.Text = "ON"
-			Check.BackgroundColor3 = Color3.fromRGB(40,120,40)
-		end
-	end
-	
-	-- Botões Select/Clear All
-	GUI.SelectAllBtn.MouseButton1Click:Connect(function()
-		for teamName, _ in pairs(_G.AimbotHub.AllowedTeams) do
-			_G.AimbotHub.AllowedTeams[teamName] = true
-		end
-		loadTeams()
-	end)
-	
-	GUI.ClearAllBtn.MouseButton1Click:Connect(function()
-		for teamName, _ in pairs(_G.AimbotHub.AllowedTeams) do
-			_G.AimbotHub.AllowedTeams[teamName] = false
-		end
-		loadTeams()
-	end)
+        local Check = Instance.new("TextButton")
+        Check.Size = UDim2.fromScale(0.2, 0.7)
+        Check.Position = UDim2.fromScale(0.75, 0.15)
+        Check.Text = _G.AimbotHub.AllowedTeams[teamName] and "IGNORAR" or "MIRAR"
+        Check.BackgroundColor3 = _G.AimbotHub.AllowedTeams[teamName] and Color3.fromRGB(120, 40, 40) or Color3.fromRGB(40, 120, 40)
+        Check.TextColor3 = Color3.new(1, 1, 1)
+        Check.Parent = Option
+        Instance.new("UICorner", Check).CornerRadius = UDim.new(0, 5)
+
+        Check.MouseButton1Click:Connect(function()
+            _G.AimbotHub.AllowedTeams[teamName] = not _G.AimbotHub.AllowedTeams[teamName]
+            Check.Text = _G.AimbotHub.AllowedTeams[teamName] and "IGNORAR" or "MIRAR"
+            Check.BackgroundColor3 = _G.AimbotHub.AllowedTeams[teamName] and Color3.fromRGB(120, 40, 40) or Color3.fromRGB(40, 120, 40)
+        end)
+    end
 end
 
 -- Animação da aba Teams
