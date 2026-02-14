@@ -137,6 +137,83 @@ Switch.ZIndex = 5
 
 Instance.new("UICorner", Switch).CornerRadius = UDim.new(1,0)
 
+--// AIM FORCE CONTROL
+local AimForce = 16 -- valor inicial (você usa depois na lógica)
+
+local ForceFrame = Instance.new("Frame")
+ForceFrame.Size = UDim2.fromScale(0.9, 0.15)
+ForceFrame.Position = UDim2.fromScale(0.05, 0.25)
+ForceFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+ForceFrame.Parent = Content
+ForceFrame.ZIndex = 4
+
+Instance.new("UICorner", ForceFrame).CornerRadius = UDim.new(0.2,0)
+
+-- LABEL
+local ForceLabel = Instance.new("TextLabel")
+ForceLabel.Size = UDim2.fromScale(0.45,1)
+ForceLabel.Position = UDim2.fromScale(0.03,0)
+ForceLabel.Text = "Aim Force"
+ForceLabel.TextScaled = true
+ForceLabel.BackgroundTransparency = 1
+ForceLabel.TextColor3 = Color3.new(1,1,1)
+ForceLabel.Font = Enum.Font.Gotham
+ForceLabel.Parent = ForceFrame
+ForceLabel.ZIndex = 5
+
+-- MINUS BUTTON
+local MinusBtn = Instance.new("TextButton")
+MinusBtn.Size = UDim2.fromScale(0.15,0.6)
+MinusBtn.Position = UDim2.fromScale(0.52,0.2)
+MinusBtn.Text = "-"
+MinusBtn.TextScaled = true
+MinusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+MinusBtn.TextColor3 = Color3.new(1,1,1)
+MinusBtn.Font = Enum.Font.GothamBold
+MinusBtn.Parent = ForceFrame
+MinusBtn.ZIndex = 5
+
+Instance.new("UICorner", MinusBtn).CornerRadius = UDim.new(1,0)
+
+-- VALUE DISPLAY
+local ValueLabel = Instance.new("TextLabel")
+ValueLabel.Size = UDim2.fromScale(0.12,0.6)
+ValueLabel.Position = UDim2.fromScale(0.69,0.2)
+ValueLabel.Text = tostring(AimForce)
+ValueLabel.TextScaled = true
+ValueLabel.BackgroundColor3 = Color3.fromRGB(40,40,40)
+ValueLabel.TextColor3 = Color3.new(1,1,1)
+ValueLabel.Font = Enum.Font.GothamBold
+ValueLabel.Parent = ForceFrame
+ValueLabel.ZIndex = 5
+
+Instance.new("UICorner", ValueLabel).CornerRadius = UDim.new(1,0)
+
+-- PLUS BUTTON
+local PlusBtn = Instance.new("TextButton")
+PlusBtn.Size = UDim2.fromScale(0.15,0.6)
+PlusBtn.Position = UDim2.fromScale(0.83,0.2)
+PlusBtn.Text = "+"
+PlusBtn.TextScaled = true
+PlusBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+PlusBtn.TextColor3 = Color3.new(1,1,1)
+PlusBtn.Font = Enum.Font.GothamBold
+PlusBtn.Parent = ForceFrame
+PlusBtn.ZIndex = 5
+
+Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(1,0)
+
+--// AIM FORCE INTERAÇÃO
+MinusBtn.MouseButton1Click:Connect(function()
+	AimForce = math.clamp(AimForce - 1, 1, 100)
+	ValueLabel.Text = tostring(AimForce)
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+	AimForce = math.clamp(AimForce + 1, 1, 100)
+	ValueLabel.Text = tostring(AimForce)
+end)
+
 --// TOGGLE MAIN WINDOW
 ToggleBtn.MouseButton1Click:Connect(function()
 	Main.Visible = not Main.Visible
@@ -224,12 +301,11 @@ local function aimAtTarget(target)
 	local currentCFrame = camera.CFrame
 	local targetCFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
 	
-	-- Smooth aim com verificação adicional
-	if AIMBOT_SETTINGS.SMOOTHNESS >= 1 then
-		camera.CFrame = targetCFrame
-	else
-		camera.CFrame = currentCFrame:Lerp(targetCFrame, AIMBOT_SETTINGS.SMOOTHNESS)
-	end
+	-- Smooth aim direto e previsível
+	local forceMultiplier = AimForce / 100
+	local adjustedSmoothness = math.clamp(forceMultiplier, 0.01, 1)
+	
+	camera.CFrame = currentCFrame:Lerp(targetCFrame, adjustedSmoothness)
 end
 
 --// AIMBOT LOOP
@@ -248,6 +324,12 @@ local function startAimbot()
 
 		local target = getClosestPlayer()
 		if target then
+			-- Verificação adicional de tela
+			local _, onScreen = Camera:WorldToViewportPoint(
+				target.Character[AIMBOT_SETTINGS.TARGET_PART].Position
+			)
+			if not onScreen then return end
+			
 			aimAtTarget(target)
 		end
 	end)
