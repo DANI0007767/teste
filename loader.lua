@@ -5,7 +5,7 @@ _G.AimbotHub = {
 	AIM_FORCE = 16,
 	FOV_ENABLED = false,
 	SilentRadius = 200,
-	AllowedTeams = {},
+	TEAM_CHECK = false, -- NOVA VARIÁVEL: false mira em todos, true ignora seu time
 	TeamsOpen = false,
 	
 	-- Configurações
@@ -32,6 +32,12 @@ GUI.Main.Visible = true -- Janela visível imediatamente
 -- Sincronizar estado com a GUI
 _G.AimbotHub.GUI = GUI
 _G.AimbotHub.Logic = Logic
+
+-- Atualizar textos iniciais com base na tabela global
+GUI.ValueLabel.Text = tostring(_G.AimbotHub.AIM_FORCE)
+GUI.FovValueLabel.Text = tostring(_G.AimbotHub.SilentRadius)
+GUI.TeamsToggle.Text = _G.AimbotHub.TEAM_CHECK and "Team Check: ON" or "Team Check: OFF"
+GUI.TeamsToggle.BackgroundColor3 = _G.AimbotHub.TEAM_CHECK and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
 
 --// 4. EVENTOS DA GUI
 
@@ -109,80 +115,18 @@ GUI.FovPlusBtn.MouseButton1Click:Connect(function()
 	GUI.FovValueLabel.Text = tostring(SilentRadius)
 end)
 
--- Sistema de Ignore Teams (Melhorado)
-local function loadTeams()
-    -- Limpar lista atual
-    for _, child in pairs(GUI.TeamsList:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
-    end
-
-    -- Pegar os times reais do jogo
-    local TeamsService = game:GetService("Teams")
-    local allTeams = TeamsService:GetTeams()
-
-    for _, team in pairs(allTeams) do
-        local teamName = team.Name
-        
-        -- Criar o layout do time na lista
-        local Option = Instance.new("Frame")
-        Option.Size = UDim2.new(1, -10, 0, 35) -- Tamanho fixo para cada linha
-        Option.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-        Option.Parent = GUI.TeamsList
-        Instance.new("UICorner", Option).CornerRadius = UDim.new(0, 5)
-
-        local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.fromScale(0.7, 1)
-        Label.Position = UDim2.fromScale(0.05, 0)
-        Label.Text = teamName
-        Label.TextColor3 = team.TeamColor.Color -- Usa a cor real do time no texto
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.BackgroundTransparency = 1
-        Label.Font = Enum.Font.Gotham
-        Label.TextScaled = true
-        Label.Parent = Option
-
-        local Check = Instance.new("TextButton")
-        Check.Size = UDim2.fromScale(0.2, 0.7)
-        Check.Position = UDim2.fromScale(0.75, 0.15)
-        Check.Text = _G.AimbotHub.AllowedTeams[teamName] and "IGNORAR" or "MIRAR"
-        Check.BackgroundColor3 = _G.AimbotHub.AllowedTeams[teamName] and Color3.fromRGB(120, 40, 40) or Color3.fromRGB(40, 120, 40)
-        Check.TextColor3 = Color3.new(1, 1, 1)
-        Check.Parent = Option
-        Instance.new("UICorner", Check).CornerRadius = UDim.new(0, 5)
-
-        Check.MouseButton1Click:Connect(function()
-            _G.AimbotHub.AllowedTeams[teamName] = not _G.AimbotHub.AllowedTeams[teamName]
-            Check.Text = _G.AimbotHub.AllowedTeams[teamName] and "IGNORAR" or "MIRAR"
-            Check.BackgroundColor3 = _G.AimbotHub.AllowedTeams[teamName] and Color3.fromRGB(120, 40, 40) or Color3.fromRGB(40, 120, 40)
-        end)
-    end
-end
-
--- Animação da aba Teams
+-- Toggle de Team Check (Simplificado)
 GUI.TeamsToggle.MouseButton1Click:Connect(function()
-	_G.AimbotHub.TeamsOpen = not _G.AimbotHub.TeamsOpen
-	GUI.TeamsToggle.Text = _G.AimbotHub.TeamsOpen and "Teams ▲" or "Teams ▼"
+	_G.AimbotHub.TEAM_CHECK = not _G.AimbotHub.TEAM_CHECK
 	
-	local teamCount = 0
-	for _ in pairs(_G.AimbotHub.AllowedTeams) do
-		teamCount = teamCount + 1
+	if _G.AimbotHub.TEAM_CHECK then
+		GUI.TeamsToggle.Text = "Team Check: ON"
+		GUI.TeamsToggle.BackgroundColor3 = Color3.fromRGB(40,120,40) -- Verde
+	else
+		GUI.TeamsToggle.Text = "Team Check: OFF"
+		GUI.TeamsToggle.BackgroundColor3 = Color3.fromRGB(120,40,40) -- Vermelho
 	end
-	
-	local maxHeight = math.min(teamCount * 0.3, 2.0)
-	
-	GUI.TeamsList:TweenSize(
-		_G.AimbotHub.TeamsOpen and UDim2.fromScale(1, maxHeight) or UDim2.fromScale(1, 0),
-		Enum.EasingDirection.Out,
-		Enum.EasingStyle.Quad,
-		0.25,
-		true
-	)
 end)
-
--- Carregar times iniciais
-Players.PlayerAdded:Connect(loadTeams)
-Players.PlayerRemoving:Connect(loadTeams)
-loadTeams()
 
 -- Ativar drag
 GUI.enableDrag(GUI.Main)
