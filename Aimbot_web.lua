@@ -4,7 +4,7 @@ local UIS = game:GetService("UserInputService")
 local LP = Players.LocalPlayer
 
 --// GLOBAL STATE
-getgenv().AIMBOT_ENABLED = false
+local AIMBOT_ENABLED = false
 
 --// GUI ROOT
 local ScreenGui = Instance.new("ScreenGui")
