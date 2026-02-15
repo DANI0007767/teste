@@ -29,7 +29,7 @@ Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0.4,0)
 
 --// MAIN WINDOW
 local Main = Instance.new("Frame")
-Main.Size = UDim2.fromScale(0.7, 0.6)
+Main.Size = UDim2.fromScale(0.35, 0.62) -- Altura aumentada para acomodar todos os botões
 Main.Position = UDim2.fromScale(0.15, 0.2)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
 Main.Visible = false
@@ -307,7 +307,7 @@ EspToggle.ZIndex = 5
 
 --// GLOBAL AIM FRAME
 local GlobalAimFrame = Instance.new("Frame")
-GlobalAimFrame.Size = UDim2.fromScale(0.9, 0.1)
+GlobalAimFrame.Size = UDim2.fromScale(0.9, 0.15) -- Padronizado com outros frames (altura 0.15)
 GlobalAimFrame.Position = UDim2.fromScale(0.05, 0.92) -- Corrigido para não sobrepor ESP
 GlobalAimFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 GlobalAimFrame.Parent = Content
@@ -316,12 +316,15 @@ GlobalAimFrame.ZIndex = 4
 Instance.new("UICorner", GlobalAimFrame).CornerRadius = UDim.new(0.2,0)
 
 local GlobalAimToggle = Instance.new("TextButton")
-GlobalAimToggle.Size = UDim2.fromScale(1,1)
+GlobalAimToggle.Size = UDim2.fromScale(1, 1) -- Escala igual aos outros botões
+GlobalAimToggle.Position = UDim2.fromScale(0, 0) -- Posição consistente com layout
 GlobalAimToggle.Text = "Global Aim: OFF"
 GlobalAimToggle.TextScaled = true
 GlobalAimToggle.BackgroundTransparency = 1
 GlobalAimToggle.TextColor3 = Color3.new(1,1,1)
 GlobalAimToggle.Font = Enum.Font.GothamBold
+GlobalAimToggle.BorderSizePixel = 0
+GlobalAimToggle.AutoButtonColor = true -- Melhor para mobile
 GlobalAimToggle.Parent = GlobalAimFrame
 GlobalAimToggle.ZIndex = 5
 
