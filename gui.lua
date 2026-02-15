@@ -305,6 +305,26 @@ EspToggle.Font = Enum.Font.GothamBold
 EspToggle.Parent = EspFrame
 EspToggle.ZIndex = 5
 
+--// GLOBAL AIM FRAME
+local GlobalAimFrame = Instance.new("Frame")
+GlobalAimFrame.Size = UDim2.fromScale(0.9, 0.1)
+GlobalAimFrame.Position = UDim2.fromScale(0.05, 0.92) -- Corrigido para não sobrepor ESP
+GlobalAimFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+GlobalAimFrame.Parent = Content
+GlobalAimFrame.ZIndex = 4
+
+Instance.new("UICorner", GlobalAimFrame).CornerRadius = UDim.new(0.2,0)
+
+local GlobalAimToggle = Instance.new("TextButton")
+GlobalAimToggle.Size = UDim2.fromScale(1,1)
+GlobalAimToggle.Text = "Global Aim: OFF"
+GlobalAimToggle.TextScaled = true
+GlobalAimToggle.BackgroundTransparency = 1
+GlobalAimToggle.TextColor3 = Color3.new(1,1,1)
+GlobalAimToggle.Font = Enum.Font.GothamBold
+GlobalAimToggle.Parent = GlobalAimFrame
+GlobalAimToggle.ZIndex = 5
+
 --// SILENT CIRCLE SETUP
 local SilentRadius = 200
 local SilentCircle = Instance.new("Frame")
@@ -400,6 +420,7 @@ return {
 	FovValueLabel = FovValueLabel,
 	TeamsToggle = TeamsToggle,
 	EspToggle = EspToggle,
+	GlobalAimToggle = GlobalAimToggle,
 	SilentCircle = SilentCircle,
 	enableDrag = enableDrag
 }
