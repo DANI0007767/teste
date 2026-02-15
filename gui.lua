@@ -274,6 +274,26 @@ TeamsToggle.Font = Enum.Font.GothamBold
 TeamsToggle.Parent = TeamsFrame
 TeamsToggle.ZIndex = 5
 
+--// ESP FRAME
+local EspFrame = Instance.new("Frame")
+EspFrame.Size = UDim2.fromScale(0.9, 0.15)
+EspFrame.Position = UDim2.fromScale(0.05, 0.82)
+EspFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+EspFrame.Parent = Content
+EspFrame.ZIndex = 4
+
+Instance.new("UICorner", EspFrame).CornerRadius = UDim.new(0.2,0)
+
+local EspToggle = Instance.new("TextButton")
+EspToggle.Size = UDim2.fromScale(1,1)
+EspToggle.Text = "ESP: OFF"
+EspToggle.TextScaled = true
+EspToggle.BackgroundTransparency = 1
+EspToggle.TextColor3 = Color3.new(1,1,1)
+EspToggle.Font = Enum.Font.GothamBold
+EspToggle.Parent = EspFrame
+EspToggle.ZIndex = 5
+
 --// SILENT CIRCLE SETUP
 local SilentRadius = 200
 local SilentCircle = Instance.new("Frame")
@@ -344,6 +364,7 @@ return {
 	FovPlusBtn = FovPlusBtn,
 	FovValueLabel = FovValueLabel,
 	TeamsToggle = TeamsToggle,
+	EspToggle = EspToggle,
 	SilentCircle = SilentCircle,
 	enableDrag = enableDrag
 }
