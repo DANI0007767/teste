@@ -27,9 +27,13 @@ task.wait(0.5) -- Intervalo para executores lentos
 local GUI = loadstring(gui_code)()
 local Logic = loadstring(logic_code)()
 
---// 3. CONECTAR E MOSTRAR (FORÇAR APARIÇÃO PARA TESTE)
-GUI.Main.Visible = true -- Janela visível imediatamente
+-- Mobile-proof: garantir que o botão ≡ sempre funcione
+GUI.ToggleBtn.Visible = true
+GUI.ToggleBtn.Active = true
+GUI.ToggleBtn.Selectable = true
+GUI.ToggleBtn.ZIndex = 1000
 
+--// 3. CONECTAR E MOSTRAR
 -- Sincronizar estado com a GUI
 _G.AimbotHub.GUI = GUI
 _G.AimbotHub.Logic = Logic
@@ -44,12 +48,7 @@ GUI.EspToggle.BackgroundColor3 = _G.AimbotHub.ESP_ENABLED and Color3.fromRGB(40,
 
 --// 4. EVENTOS DA GUI
 
--- Toggle principal da janela
-GUI.ToggleBtn.Activated:Connect(function()
-	GUI.Main.Visible = not GUI.Main.Visible
-end)
-
--- Toggle do Aimbot
+-- Toggle do Aimbot (removido evento duplicado do ToggleBtn)
 GUI.Switch.Activated:Connect(function()
 	_G.AimbotHub.AIMBOT_ENABLED = not _G.AimbotHub.AIMBOT_ENABLED
 	
@@ -149,6 +148,19 @@ end)
 -- Ativar drag
 GUI.enableDrag(GUI.Main)
 GUI.enableDrag(GUI.ToggleBtn)
+
+-- Controle explícito do ToggleBtn (mobile-proof)
+local guiOpen = true
+
+GUI.ToggleBtn.Activated:Connect(function()
+	guiOpen = not guiOpen
+	
+	GUI.Main.Visible = guiOpen
+	
+	-- segurança mobile
+	GUI.Main.Active = guiOpen
+	GUI.Main.Selectable = guiOpen
+end)
 
 --// 5. INICIAR SISTEMA
 print("🎯 Aimbot Hub carregado com sucesso!")
