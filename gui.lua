@@ -162,18 +162,22 @@ MinusBtn.ZIndex = 5
 
 Instance.new("UICorner", MinusBtn).CornerRadius = UDim.new(1,0)
 
-local ValueLabel = Instance.new("TextLabel")
-ValueLabel.Size = UDim2.fromScale(0.12,0.6)
-ValueLabel.Position = UDim2.fromScale(0.69,0.2)
-ValueLabel.Text = "16"
-ValueLabel.TextScaled = true
-ValueLabel.BackgroundColor3 = Color3.fromRGB(40,40,40)
-ValueLabel.TextColor3 = Color3.new(1,1,1)
-ValueLabel.Font = Enum.Font.GothamBold
-ValueLabel.Parent = ForceFrame
-ValueLabel.ZIndex = 5
+local ValueInput = Instance.new("TextBox")
+ValueInput.Size = UDim2.fromScale(0.12,0.6)
+ValueInput.Position = UDim2.fromScale(0.69,0.2)
+ValueInput.Text = "16"
+ValueInput.TextScaled = true
+ValueInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
+ValueInput.TextColor3 = Color3.new(1,1,1)
+ValueInput.Font = Enum.Font.GothamBold
+ValueInput.ClearTextOnFocus = false
+ValueInput.Parent = ForceFrame
+ValueInput.ZIndex = 5
 
-Instance.new("UICorner", ValueLabel).CornerRadius = UDim.new(1,0)
+-- mobile-friendly
+ValueInput.PlaceholderText = "1-100"
+
+Instance.new("UICorner", ValueInput).CornerRadius = UDim.new(1,0)
 
 local PlusBtn = Instance.new("TextButton")
 PlusBtn.Size = UDim2.fromScale(0.15,0.6)
@@ -382,11 +386,6 @@ ToggleBtn.Activated:Connect(function()
 	end
 end)
 
-ScreenGui.DisplayOrder = 999
-
-enableDrag(ToggleBtn)
-enableDrag(Header)
-
 return {
 	ScreenGui = ScreenGui,
 	Main = Main,
@@ -394,7 +393,7 @@ return {
 	Switch = Switch,
 	MinusBtn = MinusBtn,
 	PlusBtn = PlusBtn,
-	ValueLabel = ValueLabel,
+	ValueInput = ValueInput,
 	FovToggleBtn = FovToggleBtn,
 	FovMinusBtn = FovMinusBtn,
 	FovPlusBtn = FovPlusBtn,
