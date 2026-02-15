@@ -43,10 +43,10 @@ local function getClosestPlayer()
             -- 3. Wall Check (Verificar se há paredes no caminho)
             if hub.WALL_CHECK then
                 local rayOrigin = Camera.CFrame.Position
-                local rayDirection = (targetPart.Position - rayOrigin)
+                local rayDirection = (targetPart.Position - rayOrigin).Unit * 1000
                 local params = RaycastParams.new()
                 params.FilterType = Enum.RaycastFilterType.Exclude
-                params.FilterDescendantsInstances = {LP.Character}
+                params.FilterDescendantsInstances = {LP.Character, Camera}
                 
                 local result = Workspace:Raycast(rayOrigin, rayDirection, params)
                 if result and not result.Instance:IsDescendantOf(player.Character) then
@@ -76,7 +76,7 @@ local function aimAtTarget(target)
     if not targetPart then return end
 
     local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-    local smoothness = math.clamp((hub.AIM_FORCE or 16) / 100, 0.01, 1)
+    local smoothness = math.clamp((hub.AIM_FORCE or 16) / 60, 0.05, 1)
 
     Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, smoothness)
 end
@@ -106,5 +106,114 @@ function Logic.stopAimbot()
         aimbotConnection = nil
     end
 end
+
+--// SISTEMA ESP (Simples e Eficiente)
+local ESP_CACHE = {} -- Cache para armazenar ESP de cada player
+
+local function getEspColor(player)
+    -- Regra: Inimigo = vermelho, Aliado = azul
+    if _G.AimbotHub.TEAM_CHECK then
+        if player.Team == LP.Team then
+            return Color3.fromRGB(0, 100, 255) -- Azul (aliado)
+        else
+            return Color3.fromRGB(255, 0, 0) -- Vermelho (inimigo)
+        end
+    else
+        return Color3.fromRGB(255, 0, 0) -- Vermelho (inimigo)
+    end
+end
+
+local function createEsp(player)
+	if ESP_CACHE[player] then return end
+	if not player.Character then return end
+	
+	-- Opcional: ignorar NPCs
+	if not Players:GetPlayerFromCharacter(player.Character) then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESP_Highlight"
+	highlight.Adornee = player.Character
+	highlight.FillColor = getEspColor(player)
+	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	highlight.FillTransparency = 0.3
+	highlight.OutlineTransparency = 1 -- Leve e clean
+	highlight.Parent = Workspace -- Mais seguro contra Character reset
+	
+	ESP_CACHE[player] = highlight
+end
+
+local function updateEsp(player)
+    if ESP_CACHE[player] then
+        ESP_CACHE[player].FillColor = getEspColor(player)
+    end
+end
+
+local function removeEsp(player)
+    if ESP_CACHE[player] then
+        ESP_CACHE[player]:Destroy()
+        ESP_CACHE[player] = nil
+    end
+end
+
+local function isPlayerValid(player)
+    -- Condições mínimas para ESP
+    return player ~= LP 
+        and player.Character 
+        and player.Character:FindFirstChild("Humanoid") 
+        and player.Character.Humanoid.Health > 0
+end
+
+-- Loop principal do ESP
+local espConnection
+function Logic.startEspLoop()
+	if espConnection then return end -- Evita conexões duplicadas
+	
+	local lastUpdate = 0
+	espConnection = RunService.Heartbeat:Connect(function()
+		-- Otimização: não atualizar todo frame
+		if os.clock() - lastUpdate < 0.1 then return end
+		lastUpdate = os.clock()
+		
+		-- Se ESP desligado, remove tudo
+		if not _G.AimbotHub.ESP_ENABLED then
+			for player, esp in pairs(ESP_CACHE) do
+				removeEsp(player)
+			end
+			return
+		end
+		
+		-- Para cada player
+		for _, player in pairs(Players:GetPlayers()) do
+			if isPlayerValid(player) then
+				-- Se ESP não existe, cria
+				if not ESP_CACHE[player] then
+					createEsp(player)
+				end
+				-- Atualiza cor
+				updateEsp(player)
+			else
+				-- Remove ESP de player inválido
+				removeEsp(player)
+			end
+		end
+	end)
+end
+
+function Logic.stopEspLoop()
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+    
+    -- Limpa todos os ESPs
+    for player, esp in pairs(ESP_CACHE) do
+        removeEsp(player)
+    end
+end
+
+-- Limpeza quando player sai (corrigido - PlayerRemoving passa Player object)
+Players.PlayerRemoving:Connect(function(player)
+    removeEsp(player)
+end)
 
 return Logic
