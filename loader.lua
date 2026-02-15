@@ -5,7 +5,8 @@ _G.AimbotHub = {
 	AIM_FORCE = 16,
 	FOV_ENABLED = false,
 	SilentRadius = 200,
-	TEAM_CHECK = false, -- NOVA VARIÁVEL: false mira em todos, true ignora seu time
+	TEAM_CHECK = false, -- false mira em todos, true ignora seu time
+	ESP_ENABLED = false, -- NOVA VARIÁVEL: ESP toggle
 	TeamsOpen = false,
 	
 	-- Configurações
@@ -38,6 +39,8 @@ GUI.ValueLabel.Text = tostring(_G.AimbotHub.AIM_FORCE)
 GUI.FovValueLabel.Text = tostring(_G.AimbotHub.SilentRadius)
 GUI.TeamsToggle.Text = _G.AimbotHub.TEAM_CHECK and "Team Check: ON" or "Team Check: OFF"
 GUI.TeamsToggle.BackgroundColor3 = _G.AimbotHub.TEAM_CHECK and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
+GUI.EspToggle.Text = _G.AimbotHub.ESP_ENABLED and "ESP: ON" or "ESP: OFF"
+GUI.EspToggle.BackgroundColor3 = _G.AimbotHub.ESP_ENABLED and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
 
 --// 4. EVENTOS DA GUI
 
@@ -125,6 +128,21 @@ GUI.TeamsToggle.MouseButton1Click:Connect(function()
 	else
 		GUI.TeamsToggle.Text = "Team Check: OFF"
 		GUI.TeamsToggle.BackgroundColor3 = Color3.fromRGB(120,40,40) -- Vermelho
+	end
+end)
+
+-- Toggle de ESP
+GUI.EspToggle.MouseButton1Click:Connect(function()
+	_G.AimbotHub.ESP_ENABLED = not _G.AimbotHub.ESP_ENABLED
+	
+	if _G.AimbotHub.ESP_ENABLED then
+		GUI.EspToggle.Text = "ESP: ON"
+		GUI.EspToggle.BackgroundColor3 = Color3.fromRGB(40,120,40) -- Verde
+		Logic.startEspLoop()
+	else
+		GUI.EspToggle.Text = "ESP: OFF"
+		GUI.EspToggle.BackgroundColor3 = Color3.fromRGB(120,40,40) -- Vermelho
+		Logic.stopEspLoop()
 	end
 end)
 
