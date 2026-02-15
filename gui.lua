@@ -1,6 +1,7 @@
+
 --// SERVICES
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local _UserInputService = game:GetService("UserInputService")
 
 --// STATE (recebido da cola)
 local _State = {}
@@ -9,11 +10,12 @@ local _State = {}
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MobileAimbotHub"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true -- Evita GUI ser empurrada pelo notch
 ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 --// FLOATING TOGGLE BUTTON
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.fromScale(0.12, 0.08)
+ToggleBtn.Size = UDim2.fromOffset(60, 60) -- Mínimo 60x60 para mobile
 ToggleBtn.Position = UDim2.fromScale(0.05, 0.45)
 ToggleBtn.Text = "≡"
 ToggleBtn.TextScaled = true
@@ -21,6 +23,7 @@ ToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
 ToggleBtn.TextColor3 = Color3.new(1,1,1)
 ToggleBtn.Parent = ScreenGui
 ToggleBtn.Active = true
+ToggleBtn.AutoButtonColor = true -- Melhor para mobile
 ToggleBtn.ZIndex = 10
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0.4,0)
@@ -76,7 +79,7 @@ MinBtn.ZIndex = 4
 
 Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0.3,0)
 
-MinBtn.MouseButton1Click:Connect(function()
+MinBtn.Activated:Connect(function()
 	Main.Visible = false
 end)
 
@@ -316,41 +319,62 @@ circleStroke.Color = Color3.fromRGB(0, 170, 255)
 circleStroke.Transparency = 0.2
 circleStroke.Parent = SilentCircle
 
---// DRAG SYSTEM
-local dragging, dragStart, startPos
+-- Atualiza SilentCircle para acompanhar a tela (mobile-safe)
+game:GetService("RunService").RenderStepped:Connect(function()
+	SilentCircle.Position = UDim2.fromScale(0.5, 0.5)
+end)
 
+--// DRAG SYSTEM (Mobile-Safe)
 local function enableDrag(frame)
+	local dragging = false
+	local dragStart, startPos
+	local dragInput
+	local UIS = game:GetService("UserInputService")
+
 	frame.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.Touch
 		or input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
 			dragStart = input.Position
 			startPos = frame.Position
+			dragInput = input -- Guarda qual input iniciou o drag
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (
-			input.UserInputType == Enum.UserInputType.Touch or
-			input.UserInputType == Enum.UserInputType.MouseMovement
-		) then
-			local delta = input.Position - dragStart
-			frame.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
-		end
-	end)
-
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Touch
-		or input.UserInputType == Enum.UserInputType.MouseButton1 then
+	frame.InputEnded:Connect(function(input)
+		if input == dragInput then -- Só para se for o mesmo input
 			dragging = false
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then -- Só move se for o mesmo input
+			local delta = input.Position - dragStart
+			local deSilentCircle = SilentCircle
+			frame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
 		end
 	end)
 end
 
 --// EXPORTAR FUNÇÕES PARA A COLA
+Main.Visible = false
+Main.Parent = ScreenGui
+Main.Active = true
+
+ToggleBtn.Activated:Connect(function()
+	Main.Visible = not Main.Visible
+end)
+
+ScreenGui.DisplayOrder = 999
+
+enableDrag(ToggleBtn)
+enableDrag(Header)
+
 return {
 	ScreenGui = ScreenGui,
 	Main = Main,
