@@ -7,6 +7,7 @@ _G.AimbotHub = {
 	SilentRadius = 200,
 	TEAM_CHECK = false, -- false mira em todos, true ignora seu time
 	ESP_ENABLED = false, -- NOVA VARIÁVEL: ESP toggle
+	GLOBAL_AIM = false, -- NOVA VARIÁVEL: ignora FOV e direção da câmera
 	TeamsOpen = false,
 	
 	-- Configurações
@@ -45,6 +46,11 @@ GUI.TeamsToggle.Text = _G.AimbotHub.TEAM_CHECK and "Team Check: ON" or "Team Che
 GUI.TeamsToggle.BackgroundColor3 = _G.AimbotHub.TEAM_CHECK and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
 GUI.EspToggle.Text = _G.AimbotHub.ESP_ENABLED and "ESP: ON" or "ESP: OFF"
 GUI.EspToggle.BackgroundColor3 = _G.AimbotHub.ESP_ENABLED and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
+GUI.GlobalAimToggle.Text = _G.AimbotHub.GLOBAL_AIM and "Global Aim: ON" or "Global Aim: OFF"
+GUI.GlobalAimToggle.BackgroundColor3 = _G.AimbotHub.GLOBAL_AIM and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
+
+-- UX: sincronizar FOV visual com Global Aim
+GUI.SilentCircle.Visible = _G.AimbotHub.FOV_ENABLED and not _G.AimbotHub.GLOBAL_AIM
 
 --// 4. EVENTOS DA GUI
 
@@ -166,6 +172,23 @@ GUI.EspToggle.Activated:Connect(function()
 		GUI.EspToggle.Text = "ESP: OFF"
 		GUI.EspToggle.BackgroundColor3 = Color3.fromRGB(120,40,40) -- Vermelho
 		Logic.stopEspLoop()
+	end
+end)
+
+-- Toggle de Global Aim
+GUI.GlobalAimToggle.Activated:Connect(function()
+	_G.AimbotHub.GLOBAL_AIM = not _G.AimbotHub.GLOBAL_AIM
+	
+	if _G.AimbotHub.GLOBAL_AIM then
+		GUI.GlobalAimToggle.Text = "Global Aim: ON"
+		GUI.GlobalAimToggle.BackgroundColor3 = Color3.fromRGB(40,120,40) -- Verde
+		-- UX: desativar FOV visual no Global Aim
+		GUI.SilentCircle.Visible = false
+	else
+		GUI.GlobalAimToggle.Text = "Global Aim: OFF"
+		GUI.GlobalAimToggle.BackgroundColor3 = Color3.fromRGB(120,40,40) -- Vermelho
+		-- UX: reativar FOV visual se FOV_ENABLED estiver ativo
+		GUI.SilentCircle.Visible = _G.AimbotHub.FOV_ENABLED
 	end
 end)
 
