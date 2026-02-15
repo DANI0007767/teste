@@ -45,12 +45,12 @@ GUI.EspToggle.BackgroundColor3 = _G.AimbotHub.ESP_ENABLED and Color3.fromRGB(40,
 --// 4. EVENTOS DA GUI
 
 -- Toggle principal da janela
-GUI.ToggleBtn.MouseButton1Click:Connect(function()
+GUI.ToggleBtn.Activated:Connect(function()
 	GUI.Main.Visible = not GUI.Main.Visible
 end)
 
 -- Toggle do Aimbot
-GUI.Switch.MouseButton1Click:Connect(function()
+GUI.Switch.Activated:Connect(function()
 	_G.AimbotHub.AIMBOT_ENABLED = not _G.AimbotHub.AIMBOT_ENABLED
 	
 	if _G.AimbotHub.AIMBOT_ENABLED then
@@ -67,13 +67,13 @@ end)
 -- Controle de Aim Force
 local AimForce = _G.AimbotHub.AIM_FORCE
 
-GUI.MinusBtn.MouseButton1Click:Connect(function()
+GUI.MinusBtn.Activated:Connect(function()
 	AimForce = math.clamp(AimForce - 1, 1, 100)
 	_G.AimbotHub.AIM_FORCE = AimForce
 	GUI.ValueLabel.Text = tostring(AimForce)
 end)
 
-GUI.PlusBtn.MouseButton1Click:Connect(function()
+GUI.PlusBtn.Activated:Connect(function()
 	AimForce = math.clamp(AimForce + 1, 1, 100)
 	_G.AimbotHub.AIM_FORCE = AimForce
 	GUI.ValueLabel.Text = tostring(AimForce)
@@ -82,7 +82,7 @@ end)
 -- Controle de FOV Circle
 local SilentRadius = _G.AimbotHub.SilentRadius
 
-GUI.FovToggleBtn.MouseButton1Click:Connect(function()
+GUI.FovToggleBtn.Activated:Connect(function()
 	_G.AimbotHub.FOV_ENABLED = not _G.AimbotHub.FOV_ENABLED
 	
 	if _G.AimbotHub.FOV_ENABLED then
@@ -98,7 +98,7 @@ GUI.FovToggleBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
-GUI.FovMinusBtn.MouseButton1Click:Connect(function()
+GUI.FovMinusBtn.Activated:Connect(function()
 	SilentRadius = math.clamp(SilentRadius - 10, 50, 600)
 	_G.AimbotHub.SilentRadius = SilentRadius
 	GUI.SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
@@ -108,7 +108,7 @@ GUI.FovMinusBtn.MouseButton1Click:Connect(function()
 	GUI.FovValueLabel.Text = tostring(SilentRadius)
 end)
 
-GUI.FovPlusBtn.MouseButton1Click:Connect(function()
+GUI.FovPlusBtn.Activated:Connect(function()
 	SilentRadius = math.clamp(SilentRadius + 10, 50, 600)
 	_G.AimbotHub.SilentRadius = SilentRadius
 	GUI.SilentCircle.Size = UDim2.fromOffset(SilentRadius, SilentRadius)
@@ -119,7 +119,7 @@ GUI.FovPlusBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Toggle de Team Check (Simplificado)
-GUI.TeamsToggle.MouseButton1Click:Connect(function()
+GUI.TeamsToggle.Activated:Connect(function()
 	_G.AimbotHub.TEAM_CHECK = not _G.AimbotHub.TEAM_CHECK
 	
 	if _G.AimbotHub.TEAM_CHECK then
@@ -132,7 +132,7 @@ GUI.TeamsToggle.MouseButton1Click:Connect(function()
 end)
 
 -- Toggle de ESP
-GUI.EspToggle.MouseButton1Click:Connect(function()
+GUI.EspToggle.Activated:Connect(function()
 	_G.AimbotHub.ESP_ENABLED = not _G.AimbotHub.ESP_ENABLED
 	
 	if _G.AimbotHub.ESP_ENABLED then
