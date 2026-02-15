@@ -1,4 +1,3 @@
-
 --// SERVICES
 local Players = game:GetService("Players")
 local _UserInputService = game:GetService("UserInputService")
@@ -24,7 +23,7 @@ ToggleBtn.TextColor3 = Color3.new(1,1,1)
 ToggleBtn.Parent = ScreenGui
 ToggleBtn.Active = true
 ToggleBtn.AutoButtonColor = true -- Melhor para mobile
-ToggleBtn.ZIndex = 10
+ToggleBtn.ZIndex = 1000 -- Sempre acima de tudo
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0.4,0)
 
@@ -81,6 +80,11 @@ Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0.3,0)
 
 MinBtn.Activated:Connect(function()
 	Main.Visible = false
+	
+	Header.Active = false -- 🔥 ISSO resolve o bug
+	
+	ToggleBtn.Visible = true
+	ToggleBtn.ZIndex = 1000
 end)
 
 --// CONTENT
@@ -368,6 +372,14 @@ Main.Active = true
 
 ToggleBtn.Activated:Connect(function()
 	Main.Visible = not Main.Visible
+	
+	if Main.Visible then
+		Main.ZIndex = 2 -- Main acima quando visível
+		Header.Active = true -- 🔥 reativa o drag
+	else
+		Main.ZIndex = 1 -- Main abaixo quando invisível
+		Header.Active = false -- 🔥 desativa o drag
+	end
 end)
 
 ScreenGui.DisplayOrder = 999
