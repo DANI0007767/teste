@@ -47,6 +47,7 @@ local function getClosestPlayer()
                 local params = RaycastParams.new()
                 params.FilterType = Enum.RaycastFilterType.Exclude
                 params.FilterDescendantsInstances = {LP.Character, Camera}
+                params.IgnoreWater = true -- Segurança extra para mapas com água
                 
                 local result = Workspace:Raycast(rayOrigin, rayDirection, params)
                 if result and not result.Instance:IsDescendantOf(player.Character) then
@@ -54,13 +55,30 @@ local function getClosestPlayer()
                 end
             end
 
-            -- 4. FOV Check (Verificar se está dentro do círculo)
-            local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-            if onScreen then
-                local distance = getScreenDistance(Vector2.new(screenPos.X, screenPos.Y))
-                if distance < closestDistance and distance <= (hub.FOV or 250) then
-                    closestDistance = distance
+            -- 4. Global Aim vs FOV Check (A LÓGICA PRINCIPAL)
+            if hub.GLOBAL_AIM then
+                -- MODO GLOBAL AIM: Ignora FOV e direção da câmera
+                -- Sistema inteligente: distância + ângulo
+                local camDir = Camera.CFrame.LookVector
+                local dirToTarget = (targetPart.Position - Camera.CFrame.Position).Unit
+                local angleWeight = camDir:Dot(dirToTarget) -- -1 a 1 (mais alinhado = maior valor)
+                
+                local distance = (Camera.CFrame.Position - targetPart.Position).Magnitude
+                local score = distance - (angleWeight * 50) -- Prioriza alinhamento
+                
+                if score < closestDistance then
+                    closestDistance = score
                     closestPlayer = player
+                end
+            else
+                -- MODO NORMAL: Verifica FOV e se está na tela
+                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local distance = getScreenDistance(Vector2.new(screenPos.X, screenPos.Y))
+                    if distance < closestDistance and distance <= (hub.FOV or 250) then
+                        closestDistance = distance
+                        closestPlayer = player
+                    end
                 end
             end
         end
