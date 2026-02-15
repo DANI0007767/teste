@@ -39,7 +39,7 @@ _G.AimbotHub.GUI = GUI
 _G.AimbotHub.Logic = Logic
 
 -- Atualizar textos iniciais com base na tabela global
-GUI.ValueLabel.Text = tostring(_G.AimbotHub.AIM_FORCE)
+GUI.ValueInput.Text = tostring(_G.AimbotHub.AIM_FORCE)
 GUI.FovValueLabel.Text = tostring(_G.AimbotHub.SilentRadius)
 GUI.TeamsToggle.Text = _G.AimbotHub.TEAM_CHECK and "Team Check: ON" or "Team Check: OFF"
 GUI.TeamsToggle.BackgroundColor3 = _G.AimbotHub.TEAM_CHECK and Color3.fromRGB(40,120,40) or Color3.fromRGB(120,40,40)
@@ -66,16 +66,40 @@ end)
 -- Controle de Aim Force
 local AimForce = _G.AimbotHub.AIM_FORCE
 
+-- Validação do input do TextBox
+GUI.ValueInput.FocusLost:Connect(function()
+	local value = tonumber(GUI.ValueInput.Text)
+
+	if not value then
+		-- valor inválido, restaura
+		GUI.ValueInput.Text = tostring(_G.AimbotHub.AIM_FORCE)
+		return
+	end
+
+	value = math.clamp(math.floor(value), 1, 100)
+
+	_G.AimbotHub.AIM_FORCE = value
+	AimForce = value -- Sincroniza variável local
+	GUI.ValueInput.Text = tostring(value)
+end)
+
+-- Prevenir texto muito longo (UX)
+GUI.ValueInput:GetPropertyChangedSignal("Text"):Connect(function()
+	if #GUI.ValueInput.Text > 3 then
+		GUI.ValueInput.Text = string.sub(GUI.ValueInput.Text, 1, 3)
+	end
+end)
+
 GUI.MinusBtn.Activated:Connect(function()
 	AimForce = math.clamp(AimForce - 1, 1, 100)
 	_G.AimbotHub.AIM_FORCE = AimForce
-	GUI.ValueLabel.Text = tostring(AimForce)
+	GUI.ValueInput.Text = tostring(AimForce)
 end)
 
 GUI.PlusBtn.Activated:Connect(function()
 	AimForce = math.clamp(AimForce + 1, 1, 100)
 	_G.AimbotHub.AIM_FORCE = AimForce
-	GUI.ValueLabel.Text = tostring(AimForce)
+	GUI.ValueInput.Text = tostring(AimForce)
 end)
 
 -- Controle de FOV Circle
@@ -149,6 +173,9 @@ end)
 GUI.enableDrag(GUI.Main)
 GUI.enableDrag(GUI.ToggleBtn)
 
+-- Configurações finais da GUI
+GUI.ScreenGui.DisplayOrder = 999
+
 -- Controle explícito do ToggleBtn (mobile-proof)
 local guiOpen = true
 
@@ -157,9 +184,18 @@ GUI.ToggleBtn.Activated:Connect(function()
 	
 	GUI.Main.Visible = guiOpen
 	
-	-- segurança mobile
+	-- segurança mobile + Header control
 	GUI.Main.Active = guiOpen
 	GUI.Main.Selectable = guiOpen
+	
+	-- Controlar Header para drag funcionar
+	if guiOpen then
+		GUI.Main.ZIndex = 2
+		-- Header será controlado pelo próprio GUI
+	else
+		GUI.Main.ZIndex = 1
+		-- Header será desativado pelo próprio GUI
+	end
 end)
 
 --// 5. INICIAR SISTEMA
