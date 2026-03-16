@@ -38,43 +38,38 @@ end
 
 -- Criar texto acima da cabeça
 local function criarTextoHabilidade(player)
+
     local character = player.Character
     if not character then return end
-    
-    local head = character:WaitForChild("Head", 5)
+
+    local head = character:FindFirstChild("Head")
     if not head then return end
-    
-    -- Evitar duplicados
+
     if head:FindFirstChild("AbilityDisplay") then return end
-    
-    -- Criar BillboardGui
+
     local gui = Instance.new("BillboardGui")
     gui.Name = "AbilityDisplay"
-    gui.Size = UDim2.new(0, 80, 0, 20)
-    gui.StudsOffset = Vector3.new(0, 3.5, 0)
+    gui.Adornee = head
+    gui.Size = UDim2.new(0,80,0,20)
+    gui.StudsOffset = Vector3.new(0,2.5,0)
     gui.AlwaysOnTop = true
-    gui.MaxDistance = 200
-    
-    -- Criar TextLabel
+    gui.MaxDistance = 150
+    gui.Parent = head
+
     local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1, 0, 1, 0)
+    text.Size = UDim2.new(1,0,1,0)
     text.BackgroundTransparency = 1
     text.TextScaled = false
-    text.TextSize = 12
-    text.TextStrokeTransparency = 0
+    text.TextSize = 11
     text.Font = Enum.Font.GothamBold
-    text.TextColor3 = Color3.new(1, 1, 1)
-    text.TextStrokeColor3 = Color3.new(0, 0, 0)
-    text.TextWrapped = true
+    text.TextColor3 = Color3.new(1,1,1)
+    text.TextStrokeTransparency = 0
+    text.TextStrokeColor3 = Color3.new(0,0,0)
     text.Text = pegarHabilidade(player)
-    
     text.Parent = gui
-    gui.Parent = head
-    
-    -- Iniciar monitoramento com evento
-    monitorarHabilidade(player, text)
-    
-    print("✅ Display de habilidade criado para: " .. player.Name)
+
+    monitorarHabilidade(player,text)
+
 end
 
 -- Sistema principal
