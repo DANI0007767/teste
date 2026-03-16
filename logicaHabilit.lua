@@ -4,6 +4,24 @@
 
 local Players = game:GetService("Players")
 
+-- 🎨 Cores personalizadas das habilidades
+local coresHabilidades = {
+
+    ["Golpe de Deus"] = Color3.fromRGB(255,0,0), -- vermelho
+
+    ["Cola"] = Color3.fromRGB(255,255,0),
+    ["Cartões"] = Color3.fromRGB(255,255,0),
+    ["Devorador de Almas"] = Color3.fromRGB(255,255,0),
+    ["Tempo"] = Color3.fromRGB(255,255,0),
+    ["Quântico"] = Color3.fromRGB(255,255,0),
+    ["Canhão ferroviário"] = Color3.fromRGB(255,255,0),
+    ["Plasma"] = Color3.fromRGB(255,255,0),
+    ["Engenheiro"] = Color3.fromRGB(255,255,0),
+    ["Alquimista"] = Color3.fromRGB(255,255,0),
+
+    ["Segurar"] = Color3.fromRGB(0,0,0) -- preto
+}
+
 -- 🔧 Função otimizada para Ability Wars - Pega habilidade do leaderstats
 local function pegarHabilidade(player)
     local leaderstats = player:FindFirstChild("leaderstats")
@@ -19,21 +37,34 @@ local function pegarHabilidade(player)
     return "Nenhuma"
 end
 
--- 🔧 Sistema de monitoramento com evento (mais eficiente que loop)
+-- Sistema de monitoramento com evento (mais eficiente que loop)
 local function monitorarHabilidade(player, textLabel)
+
     local leaderstats = player:WaitForChild("leaderstats", 5)
     if not leaderstats then return end
     
     local ability = leaderstats:WaitForChild("Ability", 5)
     if not ability then return end
 
-    -- Atualizar texto inicial
-    textLabel.Text = ability.Value
+    local function atualizar()
 
-    -- Monitorar mudanças na habilidade
-    ability:GetPropertyChangedSignal("Value"):Connect(function()
-        textLabel.Text = ability.Value
-    end)
+        local habilidade = tostring(ability.Value)
+        textLabel.Text = habilidade
+
+        local cor = coresHabilidades[habilidade]
+
+        if cor then
+            textLabel.TextColor3 = cor
+        else
+            textLabel.TextColor3 = Color3.new(1,1,1)
+        end
+
+    end
+
+    atualizar()
+
+    ability:GetPropertyChangedSignal("Value"):Connect(atualizar)
+
 end
 
 -- Criar texto acima da cabeça
