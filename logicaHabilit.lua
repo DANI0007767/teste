@@ -28,11 +28,11 @@ local function monitorarHabilidade(player, textLabel)
     if not ability then return end
 
     -- Atualizar texto inicial
-    textLabel.Text = player.Name .. "\n" .. ability.Value
+    textLabel.Text = ability.Value
 
     -- Monitorar mudanças na habilidade
     ability:GetPropertyChangedSignal("Value"):Connect(function()
-        textLabel.Text = player.Name .. "\n" .. ability.Value
+        textLabel.Text = ability.Value
     end)
 end
 
@@ -65,7 +65,7 @@ local function criarTextoHabilidade(player)
     text.TextColor3 = Color3.new(1, 1, 1)
     text.TextStrokeColor3 = Color3.new(0, 0, 0)
     text.TextWrapped = true
-    text.Text = player.Name .. "\n" .. pegarHabilidade(player)
+    text.Text = pegarHabilidade(player)
     
     text.Parent = gui
     gui.Parent = head
