@@ -50,7 +50,7 @@ local function criarTextoHabilidade(player)
     -- Criar BillboardGui
     local gui = Instance.new("BillboardGui")
     gui.Name = "AbilityDisplay"
-    gui.Size = UDim2.new(0, 200, 0, 50)
+    gui.Size = UDim2.new(0, 120, 0, 30)
     gui.StudsOffset = Vector3.new(0, 3.5, 0)
     gui.AlwaysOnTop = true
     gui.MaxDistance = 200
@@ -59,7 +59,8 @@ local function criarTextoHabilidade(player)
     local text = Instance.new("TextLabel")
     text.Size = UDim2.new(1, 0, 1, 0)
     text.BackgroundTransparency = 1
-    text.TextScaled = true
+    text.TextScaled = false
+    text.TextSize = 16
     text.TextStrokeTransparency = 0
     text.Font = Enum.Font.GothamBold
     text.TextColor3 = Color3.new(1, 1, 1)
