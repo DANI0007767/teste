@@ -1,8 +1,13 @@
 -- SISTEMA DE EXIBIÇÃO DE HABILIDADE - ABILITY WARS
 -- Autor: Sistema de Desenvolvimento
 -- Objetivo: Mostrar habilidade do jogador acima da cabeça
+--logicaHabilit.lua
 
 local Players = game:GetService("Players")
+
+-- Criar estrutura global para export
+_G.HabilitWars = _G.HabilitWars or {}
+_G.HabilitWars.Logic = _G.HabilitWars.Logic or {}
 
 -- 🎨 Cores personalizadas das habilidades
 local coresHabilidades = {
@@ -70,6 +75,11 @@ end
 -- Criar texto acima da cabeça
 local function criarTextoHabilidade(player)
 
+    -- Verificar se ESP está ativado pela GUI
+    if getgenv().AbilityESP == false then
+        return
+    end
+
     local character = player.Character
     if not character then return end
 
@@ -131,5 +141,9 @@ Players.PlayerAdded:Connect(function(player)
     setupJogador(player)
 end)
 
-print("✅ Sistema pronto para uso!")
-print("🔄 Monitorando habilidades em tempo real...")
+print(" Sistema pronto para uso!")
+print(" Monitorando habilidades em tempo real...")
+
+-- Exportar funções para uso externo
+_G.HabilitWars.Logic.setupJogador = setupJogador
+_G.HabilitWars.Logic.pegarHabilidade = pegarHabilidade
