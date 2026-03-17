@@ -135,15 +135,14 @@ MainTab:TextBox("Tap Distance", function(value)
 end)
 
 -- =========================
--- 🔥 LÓGICA DO AUTO TAP (VERSÃO ESTÁVEL MOBILE)
+-- 🔥 LÓGICA DO AUTO TAP (VERSÃO DEFINITIVA MOBILE)
 -- =========================
 
 local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
 local ultimoAtaque = 0
-local intervalo = 0.18 -- mais estável no mobile
+local intervalo = 0.12 -- ESSENCIAL
 
 task.spawn(function()
     while task.wait(0.05) do
@@ -180,8 +179,13 @@ task.spawn(function()
             if agora - ultimoAtaque >= intervalo then
                 ultimoAtaque = agora
 
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                local tool = character:FindFirstChildOfClass("Tool")
+                    or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
+
+                if tool then
+                    tool.Parent = character
+                    tool:Activate()
+                end
             end
         end
 
