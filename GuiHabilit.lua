@@ -134,55 +134,49 @@ MainTab:TextBox("Tap Distance", function(value)
     end
 end)
 
-MainTab:TextBox("Tap Speed", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().AutoTapDelay = num
-    end
-end)
-
 -- =========================
--- 🔥 LÓGICA DO AUTO TAP
+-- 🔥 LÓGICA DO AUTO TAP (VERSÃO CORRIGIDA)
 -- =========================
 
 local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.05) do -- velocidade fixa
+
         if not getgenv().AutoTap then continue end
 
         local character = LocalPlayer.Character
         local hrp = character and character:FindFirstChild("HumanoidRootPart")
 
-        if hrp then
-            local targetPerto = false
+        if not hrp then continue end
 
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer then
-                    local char = player.Character
-                    local enemyHRP = char and char:FindFirstChild("HumanoidRootPart")
+        local menorDistancia = math.huge
+        local alvo = nil
 
-                    if enemyHRP then
-                        local distancia = (hrp.Position - enemyHRP.Position).Magnitude
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local char = player.Character
+                local enemyHRP = char and char:FindFirstChild("HumanoidRootPart")
 
-                        if distancia <= getgenv().AutoTapDistance then
-                            targetPerto = true
-                            break
-                        end
+                if enemyHRP then
+                    local distancia = (hrp.Position - enemyHRP.Position).Magnitude
+
+                    if distancia < menorDistancia then
+                        menorDistancia = distancia
+                        alvo = enemyHRP
                     end
                 end
             end
+        end
 
-            if targetPerto then
-                -- simular clique
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        if alvo and menorDistancia <= getgenv().AutoTapDistance then
+            local tool = character:FindFirstChildOfClass("Tool")
+            if tool then
+                tool:Activate()
             end
         end
 
-        task.wait(getgenv().AutoTapDelay)
     end
 end)
 
@@ -207,5 +201,4 @@ print("  - HBE: " .. (getgenv().HitboxStatus and "ON" or "OFF"))
 print("  - Ability ESP: " .. (getgenv().AbilityESP and "ON" or "OFF"))
 print("  - Auto Tap: " .. (getgenv().AutoTap and "ON" or "OFF"))
 print("  - Tap Distance: " .. getgenv().AutoTapDistance)
-print("  - Tap Speed: " .. getgenv().AutoTapDelay)
 print("📱 UI Library - Delta/Mobile 100%")
