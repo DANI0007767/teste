@@ -31,6 +31,9 @@ getgenv().HitboxSize = 15
 getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().AbilityESP = false
+getgenv().AutoTap = false
+getgenv().AutoTapDistance = 15 -- distância para ativar
+getgenv().AutoTapDelay = 0.05 -- velocidade dos cliques
 
 -- TAB
 local MainTab = Window:Tab("Main","rbxassetid://10888331510")
@@ -39,11 +42,17 @@ local MainTab = Window:Tab("Main","rbxassetid://10888331510")
 MainTab:Section("Hitbox")
 
 MainTab:TextBox("Hitbox Size", function(value)
-    getgenv().HitboxSize = tonumber(value)
+    local num = tonumber(value)
+    if num then
+        getgenv().HitboxSize = num
+    end
 end)
 
 MainTab:TextBox("Transparency", function(value)
-    getgenv().HitboxTransparency = tonumber(value)
+    local num = tonumber(value)
+    if num then
+        getgenv().HitboxTransparency = num
+    end
 end)
 
 MainTab:Toggle("HBE", function(state)
@@ -111,6 +120,72 @@ MainTab:Toggle("Ability ESP", function(state)
     end
 end)
 
+-- SEÇÃO COMBAT
+MainTab:Section("Combat")
+
+MainTab:Toggle("Auto Tap", function(state)
+    getgenv().AutoTap = state
+end)
+
+MainTab:TextBox("Tap Distance", function(value)
+    local num = tonumber(value)
+    if num then
+        getgenv().AutoTapDistance = num
+    end
+end)
+
+MainTab:TextBox("Tap Speed", function(value)
+    local num = tonumber(value)
+    if num then
+        getgenv().AutoTapDelay = num
+    end
+end)
+
+-- =========================
+-- 🔥 LÓGICA DO AUTO TAP
+-- =========================
+
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if not getgenv().AutoTap then continue end
+
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+        if hrp then
+            local targetPerto = false
+
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    local char = player.Character
+                    local enemyHRP = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if enemyHRP then
+                        local distancia = (hrp.Position - enemyHRP.Position).Magnitude
+
+                        if distancia <= getgenv().AutoTapDistance then
+                            targetPerto = true
+                            break
+                        end
+                    end
+                end
+            end
+
+            if targetPerto then
+                -- simular clique
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            end
+        end
+
+        task.wait(getgenv().AutoTapDelay)
+    end
+end)
+
 -- Exportar funções para uso externo
 _G.HabilitWars = _G.HabilitWars or {}
 _G.HabilitWars.GUI = _G.HabilitWars.GUI or {}
@@ -130,4 +205,7 @@ print("  - Hitbox Size: " .. getgenv().HitboxSize)
 print("  - Hitbox Transparency: " .. getgenv().HitboxTransparency)
 print("  - HBE: " .. (getgenv().HitboxStatus and "ON" or "OFF"))
 print("  - Ability ESP: " .. (getgenv().AbilityESP and "ON" or "OFF"))
+print("  - Auto Tap: " .. (getgenv().AutoTap and "ON" or "OFF"))
+print("  - Tap Distance: " .. getgenv().AutoTapDistance)
+print("  - Tap Speed: " .. getgenv().AutoTapDelay)
 print("📱 UI Library - Delta/Mobile 100%")
