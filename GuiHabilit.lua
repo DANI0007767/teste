@@ -37,6 +37,9 @@ getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().AbilityESP = false
 
+-- Controle de loops
+local HBELoopRunning = false
+
 -- Controle de conexões
 local HBEConnection = nil
 local ESPObjects = {}
@@ -83,33 +86,32 @@ MainTab:CreateToggle({
         getgenv().HitboxStatus = Value
         
         if Value then
-            if not HBEConnection then
-                HBEConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                    for _, player in pairs(game.Players:GetPlayers()) do
-                        if player ~= game.Players.LocalPlayer then
-                            pcall(function()
-                                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                                if hrp then
-                                    hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                                    hrp.Transparency = getgenv().HitboxTransparency
-                                    hrp.Material = Enum.Material.Neon
-                                    hrp.BrickColor = BrickColor.new("Really black")
-                                    hrp.CanCollide = false
-                                end
-                            end)
+            if not HBELoopRunning then
+                HBELoopRunning = true
+                task.spawn(function()
+                    while getgenv().HitboxStatus and HBELoopRunning do
+                        for _, player in ipairs(game.Players:GetPlayers()) do
+                            if player ~= game.Players.LocalPlayer then
+                                pcall(function()
+                                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                                        hrp.Transparency = getgenv().HitboxTransparency
+                                        hrp.Material = Enum.Material.Neon
+                                        hrp.BrickColor = BrickColor.new("Really black")
+                                        hrp.CanCollide = false
+                                    end
+                                end)
+                            end
                         end
+                        task.wait(0.1) -- 🔥 reduz MUITO o peso no mobile
                     end
+                    HBELoopRunning = false
                 end)
             end
         else
-            -- Desliga loop
-            if HBEConnection then
-                HBEConnection:Disconnect()
-                HBEConnection = nil
-            end
-            
             -- Reseta hitboxes
-            for _, player in pairs(game.Players:GetPlayers()) do
+            for _, player in ipairs(game.Players:GetPlayers()) do
                 if player ~= game.Players.LocalPlayer then
                     pcall(function()
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -137,33 +139,26 @@ MainTab:CreateToggle({
         getgenv().AbilityESP = Value
         
         if not Value then
-            -- Remove todos os ESPs
-            for _, v in pairs(ESPObjects) do
-                if v then v:Destroy() end
+            -- REMOVE TODOS OS ESPs (do sistema da lógica)
+            for _, player in pairs(game.Players:GetPlayers()) do
+                local char = player.Character
+                if char and char:FindFirstChild("Head") then
+                    local head = char.Head
+                    local esp = head:FindFirstChild("AbilityDisplay")
+                    if esp then
+                        esp:Destroy()
+                    end
+                end
             end
-            ESPObjects = {}
         else
-            -- Ativa ESP para jogadores existentes
+            -- ATIVA USANDO SUA LÓGICA
             for _, player in pairs(game.Players:GetPlayers()) do
                 if player ~= game.Players.LocalPlayer then
-                    local char = player.Character
-                    if char and char:FindFirstChild("Head") then
-                        local billboard = Instance.new("BillboardGui")
-                        billboard.Size = UDim2.new(0,100,0,40)
-                        billboard.Adornee = char.Head
-                        billboard.AlwaysOnTop = true
-                        billboard.Parent = char
+                    if _G.HabilitWars 
+                    and _G.HabilitWars.Logic 
+                    and _G.HabilitWars.Logic.setupJogador then
                         
-                        local text = Instance.new("TextLabel")
-                        text.Size = UDim2.new(1,0,1,0)
-                        text.BackgroundTransparency = 1
-                        text.TextScaled = false
-                        text.TextSize = 14
-                        text.Text = "Habilidade"
-                        text.TextColor3 = Color3.new(1,1,1)
-                        text.Parent = billboard
-                        
-                        table.insert(ESPObjects, billboard)
+                        _G.HabilitWars.Logic.setupJogador(player)
                     end
                 end
             end
@@ -184,8 +179,13 @@ SettingsTab:CreateButton({
     Name = "Reload GUI",
     Callback = function()
         Rayfield:Destroy()
-        wait(1)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/DANI0007767/teste/main/GuiHabilit.lua"))()
+        task.wait(1)
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/DANI0007767/teste/main/GuiHabilit.lua"))()
+        end)
+        if not success then
+            warn("Erro ao carregar GUI:", err)
+        end
     end,
 })
 
@@ -198,69 +198,33 @@ SettingsTab:CreateButton({
 })
 
 -- =========================
--- 🔴 SISTEMA DE ESP AVANÇADO
+-- 🔴 MOBILE UX - KEYBIND
 -- =========================
 
--- Função para criar ESP para jogador
-local function createESP(player)
-    if not getgenv().AbilityESP then return end
-    
-    local char = player.Character
-    if char and char:FindFirstChild("Head") then
-        -- Remover ESP antigo corretamente
-        for _, v in pairs(char:GetChildren()) do
-            if v:IsA("BillboardGui") and v.Name == "AbilityESP" then
-                v:Destroy()
-            end
-        end
-        
-        -- Criar novo ESP
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "AbilityESP"
-        billboard.Size = UDim2.new(0,100,0,40)
-        billboard.Adornee = char.Head
-        billboard.AlwaysOnTop = true
-        billboard.Parent = char
-        
-        local text = Instance.new("TextLabel")
-        text.Size = UDim2.new(1,0,1,0)
-        text.BackgroundTransparency = 1
-        text.TextScaled = false
-        text.TextSize = 14
-        text.Text = "Habilidade"
-        text.TextColor3 = Color3.new(1,1,1)
-        text.Parent = billboard
-        
-        table.insert(ESPObjects, billboard)
-    end
-end
+-- Notificação de keybind
+Rayfield:Notify({
+    Title = "Habilit Wars",
+    Content = "Pressione RightControl para abrir/fechar",
+    Duration = 5
+})
 
--- Conectar eventos de jogador
-game.Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(1)
-        if getgenv().AbilityESP then
-            createESP(player)
-        end
-    end)
-end)
+-- Keybind para toggle rápido
+Rayfield:BindKey({
+    Name = "Toggle UI",
+    Keybind = Enum.KeyCode.RightControl,
+    Hold = false,
+    Callback = function()
+        Rayfield:Toggle()
+    end,
+})
 
--- Conectar jogadores existentes
-for _, player in ipairs(game.Players:GetPlayers()) do
-    if player ~= game.Players.LocalPlayer then
-        player.CharacterAdded:Connect(function()
-            task.wait(1)
-            if getgenv().AbilityESP then
-                createESP(player)
-            end
-        end)
-    end
-end
+-- =========================
+-- 🔴 EXPORTAR FUNÇÕES
+-- =========================
 
 -- Exportar funções para uso externo
 _G.HabilitWars = _G.HabilitWars or {}
 _G.HabilitWars.GUI = _G.HabilitWars.GUI or {}
-_G.HabilitWars.GUI.createESP = createESP
 
 -- Notificação de carregamento
 pcall(function()
