@@ -135,11 +135,30 @@ MainTab:TextBox("Tap Distance", function(value)
 end)
 
 -- =========================
--- 🔥 LÓGICA DO AUTO TAP (VERSÃO CORRIGIDA)
+-- 🔥 LÓGICA DO AUTO TAP (VERSÃO DEFINITIVA)
 -- =========================
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+
+-- 🧩 NOVA FUNÇÃO DE ATAQUE (mesmo método da cura)
+local function ativarAtaque()
+    local abilityGui = LocalPlayer.PlayerGui:FindFirstChild("Ability Buttons")
+    if not abilityGui then return end
+
+    local botao = abilityGui:FindFirstChild("M1") -- ou tenta "Punch" dependendo do jogo
+    if not botao then return end
+
+    local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+
+    for _, eventName in pairs(events) do
+        if botao[eventName] then
+            for _, connection in pairs(getconnections(botao[eventName])) do
+                connection:Fire()
+            end
+        end
+    end
+end
 
 task.spawn(function()
     while task.wait(0.05) do -- velocidade fixa
@@ -171,10 +190,7 @@ task.spawn(function()
         end
 
         if alvo and menorDistancia <= getgenv().AutoTapDistance then
-            local tool = character:FindFirstChildOfClass("Tool")
-            if tool then
-                tool:Activate()
-            end
+            ativarAtaque()
         end
 
     end
