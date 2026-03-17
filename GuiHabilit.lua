@@ -1,216 +1,151 @@
--- GUI HABILIT WARS - UI LIBRARY CUSTOM
--- Versão mobile-friendly com botão flutuante
+-- SISTEMA DE EXIBIÇÃO DE HABILIDADE - ABILITY WARS
 -- Autor: Sistema de Desenvolvimento
--- Biblioteca: MyUILib (Delta/Mobile compatível)
-
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vcsk/UI-Library/main/Source/MyUILib(Unamed).lua"))()
-local Window = Library:Create("Habilit Wars")
-
--- Botão flutuante (mobile)
-local ToggleGui = Instance.new("ScreenGui")
-local Toggle = Instance.new("TextButton")
-
-ToggleGui.Parent = game.CoreGui
-
-Toggle.Parent = ToggleGui
-Toggle.BackgroundColor3 = Color3.fromRGB(24,24,24)
-Toggle.BackgroundTransparency = 0.6
-Toggle.Position = UDim2.new(0,0,0.4,0)
-Toggle.Size = UDim2.new(0,80,0,40)
-Toggle.Text = "Open"
-Toggle.TextScaled = true
-Toggle.Active = true
-Toggle.Draggable = true
-
-Toggle.MouseButton1Click:Connect(function()
-    Library:ToggleUI()
-end)
-
--- Variáveis globais de controle
-getgenv().HitboxSize = 15
-getgenv().HitboxTransparency = 0.9
-getgenv().HitboxStatus = false
-getgenv().AbilityESP = false
-getgenv().AutoTap = false
-getgenv().AutoTapDistance = 15 -- distância para ativar
-getgenv().AutoTapDelay = 0.05 -- velocidade dos cliques
-
--- TAB
-local MainTab = Window:Tab("Main","rbxassetid://10888331510")
-
--- SEÇÃO HBE
-MainTab:Section("Hitbox")
-
-MainTab:TextBox("Hitbox Size", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().HitboxSize = num
-    end
-end)
-
-MainTab:TextBox("Transparency", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().HitboxTransparency = num
-    end
-end)
-
-MainTab:Toggle("HBE", function(state)
-    getgenv().HitboxStatus = state
-
-    if state then
-        task.spawn(function()
-            while getgenv().HitboxStatus do
-                for _, player in ipairs(game.Players:GetPlayers()) do
-                    if player ~= game.Players.LocalPlayer then
-                        pcall(function()
-                            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                            if hrp then
-                                hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                                hrp.Transparency = getgenv().HitboxTransparency
-                                hrp.Material = Enum.Material.Neon
-                                hrp.BrickColor = BrickColor.new("Really black")
-                                hrp.CanCollide = false
-                            end
-                        end)
-                    end
-                end
-                task.wait(0.1)
-            end
-        end)
-    else
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer then
-                pcall(function()
-                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.Size = Vector3.new(2,2,1)
-                        hrp.Transparency = 1
-                    end
-                end)
-            end
-        end
-    end
-end)
-
--- SEÇÃO ESP
-MainTab:Section("Ability ESP")
-
-MainTab:Toggle("Ability ESP", function(state)
-    getgenv().AbilityESP = state
-
-    if not state then
-        for _, player in pairs(game.Players:GetPlayers()) do
-            local char = player.Character
-            if char and char:FindFirstChild("Head") then
-                local esp = char.Head:FindFirstChild("AbilityDisplay")
-                if esp then
-                    esp:Destroy()
-                end
-            end
-        end
-    else
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer then
-                if _G.HabilitWars and _G.HabilitWars.Logic then
-                    _G.HabilitWars.Logic.setupJogador(player)
-                end
-            end
-        end
-    end
-end)
-
--- SEÇÃO COMBAT
-MainTab:Section("Combat")
-
-MainTab:Toggle("Auto Tap", function(state)
-    getgenv().AutoTap = state
-end)
-
-MainTab:TextBox("Tap Distance", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().AutoTapDistance = num
-    end
-end)
-
--- =========================
--- 🔥 LÓGICA DO AUTO TAP (VERSÃO DEFINITIVA MOBILE)
--- =========================
+-- Objetivo: Mostrar habilidade do jogador acima da cabeça
+--logicaHabilit.lua
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 
-local ultimoAtaque = 0
-local intervalo = 0.12 -- ESSENCIAL
+-- Criar estrutura global para export
+_G.HabilitWars = _G.HabilitWars or {}
+_G.HabilitWars.Logic = _G.HabilitWars.Logic or {}
 
-task.spawn(function()
-    while task.wait(0.05) do
+-- 🎨 Cores personalizadas das habilidades
+local coresHabilidades = {
 
-        if not getgenv().AutoTap then continue end
+    ["Golpe de Deus"] = Color3.fromRGB(255,0,0), -- vermelho
 
-        local character = LocalPlayer.Character
-        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    ["Cola"] = Color3.fromRGB(255,255,0),
+    ["Cartões"] = Color3.fromRGB(255,255,0),
+    ["Devorador de Almas"] = Color3.fromRGB(255,255,0),
+    ["Tempo"] = Color3.fromRGB(255,255,0),
+    ["Quântico"] = Color3.fromRGB(255,255,0),
+    ["Canhão ferroviário"] = Color3.fromRGB(255,255,0),
+    ["Plasma"] = Color3.fromRGB(255,255,0),
+    ["Engenheiro"] = Color3.fromRGB(255,255,0),
+    ["Alquimista"] = Color3.fromRGB(255,255,0),
 
-        if not hrp then continue end
+    ["Segurar"] = Color3.fromRGB(0,0,0) -- preto
+}
 
-        local menorDistancia = math.huge
-        local alvo = nil
+-- 🔧 Função otimizada para Ability Wars - Pega habilidade do leaderstats
+local function pegarHabilidade(player)
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then
+        return "Nenhuma"
+    end
 
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                local char = player.Character
-                local enemyHRP = char and char:FindFirstChild("HumanoidRootPart")
+    local ability = leaderstats:FindFirstChild("Ability")
+    if ability then
+        return tostring(ability.Value)
+    end
 
-                if enemyHRP then
-                    local distancia = (hrp.Position - enemyHRP.Position).Magnitude
+    return "Nenhuma"
+end
 
-                    if distancia < menorDistancia then
-                        menorDistancia = distancia
-                        alvo = enemyHRP
-                    end
-                end
-            end
-        end
+-- Sistema de monitoramento com evento (mais eficiente que loop)
+local function monitorarHabilidade(player, textLabel)
 
-        if alvo and menorDistancia <= getgenv().AutoTapDistance then
-            local agora = tick()
+    local leaderstats = player:WaitForChild("leaderstats", 5)
+    if not leaderstats then return end
+    
+    local ability = leaderstats:WaitForChild("Ability", 5)
+    if not ability then return end
 
-            if agora - ultimoAtaque >= intervalo then
-                ultimoAtaque = agora
+    local function atualizar()
 
-                local tool = character:FindFirstChildOfClass("Tool")
-                    or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
+        local habilidade = tostring(ability.Value)
+        textLabel.Text = habilidade
 
-                if tool then
-                    tool.Parent = character
-                    tool:Activate()
-                end
-            end
+        local cor = coresHabilidades[habilidade]
+
+        if cor then
+            textLabel.TextColor3 = cor
+        else
+            textLabel.TextColor3 = Color3.new(1,1,1)
         end
 
     end
+
+    atualizar()
+
+    ability:GetPropertyChangedSignal("Value"):Connect(atualizar)
+
+end
+
+-- Criar texto acima da cabeça
+local function criarTextoHabilidade(player)
+
+    -- Verificar se ESP está ativado pela GUI
+    if getgenv().AbilityESP == false then
+        return
+    end
+
+    local character = player.Character
+    if not character then return end
+
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+
+    if head:FindFirstChild("AbilityDisplay") then return end
+
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "AbilityDisplay"
+    gui.Adornee = head
+    gui.Size = UDim2.new(0,80,0,20)
+    gui.StudsOffset = Vector3.new(0,2.5,0)
+    gui.AlwaysOnTop = true
+    gui.MaxDistance = 150
+    gui.Parent = head
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.TextScaled = false
+    text.TextSize = 11
+    text.Font = Enum.Font.GothamBold
+    text.TextColor3 = Color3.new(1,1,1)
+    text.TextStrokeTransparency = 0
+    text.TextStrokeColor3 = Color3.new(0,0,0)
+    text.Text = pegarHabilidade(player)
+    text.Parent = gui
+
+    monitorarHabilidade(player,text)
+
+end
+
+-- Sistema principal
+local function setupJogador(player)
+    -- Configurar evento CharacterAdded primeiro
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1) -- Esperar character carregar
+        criarTextoHabilidade(player)
+    end)
+
+    -- Se já tem character, criar display
+    if player.Character then
+        criarTextoHabilidade(player)
+    end
+end
+
+-- INICIALIZAÇÃO DO SISTEMA
+print(" SISTEMA ABILITY WARS ATIVADO!")
+
+-- Aplicar para todos os jogadores atuais (só se ESP estiver ativo)
+if getgenv().AbilityESP then
+    for _, player in pairs(Players:GetPlayers()) do
+        setupJogador(player)
+    end
+end
+
+-- Detectar novos jogadores
+Players.PlayerAdded:Connect(function(player)
+    task.wait(3) -- Esperar jogador carregar
+    setupJogador(player)
 end)
+
+print(" Sistema pronto para uso!")
+print(" Monitorando habilidades em tempo real...")
 
 -- Exportar funções para uso externo
-_G.HabilitWars = _G.HabilitWars or {}
-_G.HabilitWars.GUI = _G.HabilitWars.GUI or {}
-
--- Notificação de carregamento
-pcall(function()
-    game.StarterGui:SetCore("ChatMakeSystemMessage", {
-        Text = "[Habilit Wars] UI Library carregada com sucesso!";
-        Color = Color3.fromRGB(0, 255, 0);
-        Font = Enum.Font.GothamBold;
-    })
-end)
-
-print("✅ GUI Habilit Wars (UI Library) carregada!")
-print("🎮 Controles disponíveis:")
-print("  - Hitbox Size: " .. getgenv().HitboxSize)
-print("  - Hitbox Transparency: " .. getgenv().HitboxTransparency)
-print("  - HBE: " .. (getgenv().HitboxStatus and "ON" or "OFF"))
-print("  - Ability ESP: " .. (getgenv().AbilityESP and "ON" or "OFF"))
-print("  - Auto Tap: " .. (getgenv().AutoTap and "ON" or "OFF"))
-print("  - Tap Distance: " .. getgenv().AutoTapDistance)
-print("📱 UI Library - Delta/Mobile 100%")
+_G.HabilitWars.Logic.setupJogador = setupJogador
+_G.HabilitWars.Logic.pegarHabilidade = pegarHabilidade
