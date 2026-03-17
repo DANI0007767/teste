@@ -128,11 +128,13 @@ local function setupJogador(player)
 end
 
 -- INICIALIZAÇÃO DO SISTEMA
-print("� SISTEMA ABILITY WARS ATIVADO!")
+print(" SISTEMA ABILITY WARS ATIVADO!")
 
--- Aplicar para todos os jogadores atuais
-for _, player in pairs(Players:GetPlayers()) do
-    setupJogador(player)
+-- Aplicar para todos os jogadores atuais (só se ESP estiver ativo)
+if getgenv().AbilityESP then
+    for _, player in pairs(Players:GetPlayers()) do
+        setupJogador(player)
+    end
 end
 
 -- Detectar novos jogadores
