@@ -9,11 +9,16 @@ local Players = game:GetService("Players")
 _G.HabilitWars = _G.HabilitWars or {}
 _G.HabilitWars.Logic = _G.HabilitWars.Logic or {}
 
--- 🎨 Cores personalizadas das habilidades
+-- 🎨 Cores personalizadas das habilidades (ORGANIZADO POR CATEGORIA)
 local coresHabilidades = {
-
-    ["Golpe de Deus"] = Color3.fromRGB(255,0,0), -- vermelho
-
+    -- 🔥 PODERES OFENSIVOS (VERMELHO)
+    ["Golpe de Deus"] = Color3.fromRGB(255,0,0),
+    ["Meteoro"] = Color3.fromRGB(255,0,0),
+    ["Explosão"] = Color3.fromRGB(255,0,0),
+    ["Fúria"] = Color3.fromRGB(255,0,0),
+    ["Raio"] = Color3.fromRGB(255,0,0),
+    
+    -- 🟡 PODERES DE CONTROLE/UTILIDADE (AMARELO - PLAMAS)
     ["Cola"] = Color3.fromRGB(255,255,0),
     ["Cartões"] = Color3.fromRGB(255,255,0),
     ["Devorador de Almas"] = Color3.fromRGB(255,255,0),
@@ -23,8 +28,34 @@ local coresHabilidades = {
     ["Plasma"] = Color3.fromRGB(255,255,0),
     ["Engenheiro"] = Color3.fromRGB(255,255,0),
     ["Alquimista"] = Color3.fromRGB(255,255,0),
-
-    ["Segurar"] = Color3.fromRGB(0,0,0) -- preto
+    ["Teleporte"] = Color3.fromRGB(255,255,0),
+    ["Congelamento"] = Color3.fromRGB(255,255,0),
+    ["Stun"] = Color3.fromRGB(255,255,0),
+    ["Slow"] = Color3.fromRGB(255,255,0),
+    
+    -- 🔵 PODERES DE DEFESA (AZUL)
+    ["Escudo"] = Color3.fromRGB(0,100,255),
+    ["Proteção"] = Color3.fromRGB(0,100,255),
+    ["Invisibilidade"] = Color3.fromRGB(0,100,255),
+    ["Barreira"] = Color3.fromRGB(0,100,255),
+    
+    -- 🟢 PODERES DE CURA/SUPORTE (VERDE)
+    ["Cura"] = Color3.fromRGB(0,255,0),
+    ["Vida"] = Color3.fromRGB(0,255,0),
+    ["Regeneração"] = Color3.fromRGB(0,255,0),
+    ["Suporte"] = Color3.fromRGB(0,255,0),
+    
+    -- 🟣 PODERES ESPECIAIS (ROXO)
+    ["Vôo"] = Color3.fromRGB(150,0,255),
+    ["Super Pulo"] = Color3.fromRGB(150,0,255),
+    ["Velocidade"] = Color3.fromRGB(150,0,255),
+    ["Força"] = Color3.fromRGB(150,0,255),
+    
+    -- ⚫ PODERES NEUTROS/OUTROS (PRETO)
+    ["Segurar"] = Color3.fromRGB(0,0,0),
+    ["Empurrão"] = Color3.fromRGB(0,0,0),
+    ["Básico"] = Color3.fromRGB(0,0,0),
+    ["Nenhuma"] = Color3.fromRGB(128,128,128) -- Cinza para habilidade vazia
 }
 
 -- 🔧 Função otimizada para Ability Wars - Pega habilidade do leaderstats
@@ -56,7 +87,17 @@ local function monitorarHabilidade(player, textLabel)
         local habilidade = tostring(ability.Value)
         textLabel.Text = habilidade
 
-        local cor = coresHabilidades[habilidade]
+        -- NORMALIZAÇÃO (ANTI BUG DE NOME)
+        local habilidadeFormatada = string.lower(habilidade):gsub("%s+", "")
+
+        local cor = nil
+
+        for nome, corTabela in pairs(coresHabilidades) do
+            if string.lower(nome):gsub("%s+", "") == habilidadeFormatada then
+                cor = corTabela
+                break
+            end
+        end
 
         if cor then
             textLabel.TextColor3 = cor
