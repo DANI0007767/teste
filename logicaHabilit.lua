@@ -32,6 +32,8 @@ local coresHabilidades = {
     ["Freeze"] = Color3.fromRGB(255,255,0),
     ["Stun"] = Color3.fromRGB(255,255,0),
     ["Slow"] = Color3.fromRGB(255,255,0),
+    ["Magnet"] = Color3.fromRGB(255,255,0),
+    ["Seat"] = Color3.fromRGB(255,255,0),
     
     -- 🔵 PODERES DE DEFESA (AZUL)
     ["Shield"] = Color3.fromRGB(0,100,255),
