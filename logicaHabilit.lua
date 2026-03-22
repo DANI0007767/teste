@@ -9,60 +9,60 @@ local Players = game:GetService("Players")
 _G.HabilitWars = _G.HabilitWars or {}
 _G.HabilitWars.Logic = _G.HabilitWars.Logic or {}
 
--- 🎨 Cores personalizadas das habilidades (ORGANIZADO POR CATEGORIA)
+-- 🎨 Cores personalizadas das habilidades (NOMES REAIS EM INGLÊS)
 local coresHabilidades = {
     -- 🔥 PODERES OFENSIVOS (VERMELHO)
-    ["Golpe de Deus"] = Color3.fromRGB(255,0,0),
-    ["Meteoro"] = Color3.fromRGB(255,0,0),
-    ["Explosão"] = Color3.fromRGB(255,0,0),
-    ["Fúria"] = Color3.fromRGB(255,0,0),
-    ["Raio"] = Color3.fromRGB(255,0,0),
+    ["God Punch"] = Color3.fromRGB(255,0,0),
+    ["Meteor"] = Color3.fromRGB(255,0,0),
+    ["Explosion"] = Color3.fromRGB(255,0,0),
+    ["Fury"] = Color3.fromRGB(255,0,0),
+    ["Lightning"] = Color3.fromRGB(255,0,0),
     
     -- 🟡 PODERES DE CONTROLE/UTILIDADE (AMARELO - PLAMAS)
-    ["Cola"] = Color3.fromRGB(255,255,0),
-    ["Cartões"] = Color3.fromRGB(255,255,0),
-    ["Devorador de Almas"] = Color3.fromRGB(255,255,0),
-    ["Tempo"] = Color3.fromRGB(255,255,0),
-    ["Quântico"] = Color3.fromRGB(255,255,0),
-    ["Canhão ferroviário"] = Color3.fromRGB(255,255,0),
+    ["Glue"] = Color3.fromRGB(255,255,0),
+    ["Cards"] = Color3.fromRGB(255,255,0),
+    ["Soul Stealer"] = Color3.fromRGB(255,255,0),
+    ["Time"] = Color3.fromRGB(255,255,0),
+    ["Quantum"] = Color3.fromRGB(255,255,0),
+    ["Railgun"] = Color3.fromRGB(255,255,0),
     ["Plasma"] = Color3.fromRGB(255,255,0),
-    ["Engenheiro"] = Color3.fromRGB(255,255,0),
-    ["Alquimista"] = Color3.fromRGB(255,255,0),
-    ["Teleporte"] = Color3.fromRGB(255,255,0),
-    ["Congelamento"] = Color3.fromRGB(255,255,0),
+    ["Engineer"] = Color3.fromRGB(255,255,0),
+    ["Alchemist"] = Color3.fromRGB(255,255,0),
+    ["Teleport"] = Color3.fromRGB(255,255,0),
+    ["Freeze"] = Color3.fromRGB(255,255,0),
     ["Stun"] = Color3.fromRGB(255,255,0),
     ["Slow"] = Color3.fromRGB(255,255,0),
     
     -- 🔵 PODERES DE DEFESA (AZUL)
-    ["Escudo"] = Color3.fromRGB(0,100,255),
-    ["Proteção"] = Color3.fromRGB(0,100,255),
-    ["Invisibilidade"] = Color3.fromRGB(0,100,255),
-    ["Barreira"] = Color3.fromRGB(0,100,255),
+    ["Shield"] = Color3.fromRGB(0,100,255),
+    ["Protection"] = Color3.fromRGB(0,100,255),
+    ["Invisibility"] = Color3.fromRGB(0,100,255),
+    ["Barrier"] = Color3.fromRGB(0,100,255),
     
     -- 🟢 PODERES DE CURA/SUPORTE (VERDE)
-    ["Cura"] = Color3.fromRGB(0,255,0),
-    ["Vida"] = Color3.fromRGB(0,255,0),
-    ["Regeneração"] = Color3.fromRGB(0,255,0),
-    ["Suporte"] = Color3.fromRGB(0,255,0),
+    ["Heal"] = Color3.fromRGB(0,255,0),
+    ["Life"] = Color3.fromRGB(0,255,0),
+    ["Regeneration"] = Color3.fromRGB(0,255,0),
+    ["Support"] = Color3.fromRGB(0,255,0),
     
     -- 🟣 PODERES ESPECIAIS (ROXO)
-    ["Vôo"] = Color3.fromRGB(150,0,255),
-    ["Super Pulo"] = Color3.fromRGB(150,0,255),
-    ["Velocidade"] = Color3.fromRGB(150,0,255),
-    ["Força"] = Color3.fromRGB(150,0,255),
+    ["Fly"] = Color3.fromRGB(150,0,255),
+    ["Super Jump"] = Color3.fromRGB(150,0,255),
+    ["Speed"] = Color3.fromRGB(150,0,255),
+    ["Strength"] = Color3.fromRGB(150,0,255),
     
     -- ⚫ PODERES NEUTROS/OUTROS (PRETO)
-    ["Segurar"] = Color3.fromRGB(0,0,0),
-    ["Empurrão"] = Color3.fromRGB(0,0,0),
-    ["Básico"] = Color3.fromRGB(0,0,0),
-    ["Nenhuma"] = Color3.fromRGB(128,128,128) -- Cinza para habilidade vazia
+    ["Hold"] = Color3.fromRGB(0,0,0),
+    ["Push"] = Color3.fromRGB(0,0,0),
+    ["Basic"] = Color3.fromRGB(0,0,0),
+    ["None"] = Color3.fromRGB(128,128,128) -- Cinza para habilidade vazia
 }
 
--- 🔧 Função otimizada para Ability Wars - Pega habilidade do leaderstats
+-- Função otimizada para Ability Wars - Pega habilidade do leaderstats
 local function pegarHabilidade(player)
     local leaderstats = player:FindFirstChild("leaderstats")
     if not leaderstats then
-        return "Nenhuma"
+        return "None"
     end
 
     local ability = leaderstats:FindFirstChild("Ability")
@@ -70,7 +70,7 @@ local function pegarHabilidade(player)
         return tostring(ability.Value)
     end
 
-    return "Nenhuma"
+    return "None"
 end
 
 -- Sistema de monitoramento com evento (mais eficiente que loop)
@@ -88,12 +88,18 @@ local function monitorarHabilidade(player, textLabel)
         textLabel.Text = habilidade
 
         -- NORMALIZAÇÃO (ANTI BUG DE NOME)
-        local habilidadeFormatada = string.lower(habilidade):gsub("%s+", "")
+        local habilidadeFormatada = string.lower(habilidade)
+        habilidadeFormatada = habilidadeFormatada:gsub("%s+", "")
+        habilidadeFormatada = habilidadeFormatada:gsub("%p+", "")
 
         local cor = nil
 
         for nome, corTabela in pairs(coresHabilidades) do
-            if string.lower(nome):gsub("%s+", "") == habilidadeFormatada then
+            local nomeFormatado = string.lower(nome)
+            nomeFormatado = nomeFormatado:gsub("%s+", "")
+            nomeFormatado = nomeFormatado:gsub("%p+", "")
+            
+            if nomeFormatado == habilidadeFormatada then
                 cor = corTabela
                 break
             end
