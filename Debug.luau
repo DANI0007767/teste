@@ -1,82 +1,61 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Log = "--- INVESTIGAÇÃO DE REDE AB ---\n"
+local Log = "--- BUSCA DE REMOTES AW ---\n"
 
--- GUI (Segura e sem bugs de foco)
+-- GUI Minimalista (Sem chance de travar o touch)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_Investigator"
+screenGui.Name = "AW_Finder"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 180)
-frame.Position = UDim2.new(0.5, -140, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-frame.BorderSizePixel = 0
+frame.Size = UDim2.new(0, 220, 0, 120)
+frame.Position = UDim2.new(0.5, -110, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+frame.Active = true -- Permite interação
+frame.Draggable = true -- Ativa o movimento
 frame.Parent = screenGui
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "AW - Localizador de Hitbox"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-title.Parent = frame
-
 local status = Instance.new("TextLabel")
-status.Size = UDim2.new(0.9, 0, 0, 90)
-status.Position = UDim2.new(0.05, 0, 0.2, 0)
-status.Text = "Dê tapas em ALGUÉM na arena para capturar o evento de dano..."
-status.TextColor3 = Color3.fromRGB(255, 200, 0)
+status.Size = UDim2.new(1, 0, 0, 60)
+status.Text = "Clique no botão para escanear os eventos do jogo"
+status.TextColor3 = Color3.new(1, 1, 1)
 status.BackgroundTransparency = 1
 status.TextWrapped = true
 status.Parent = frame
 
-local copyBtn = Instance.new("TextButton")
-copyBtn.Size = UDim2.new(0.9, 0, 0, 35)
-copyBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
-copyBtn.Text = "COPIAR DADOS DE HIT"
-copyBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
-copyBtn.TextColor3 = Color3.new(1, 1, 1)
-copyBtn.Parent = frame
+local scanBtn = Instance.new("TextButton")
+scanBtn.Size = UDim2.new(0.9, 0, 0, 40)
+scanBtn.Position = UDim2.new(0.05, 0, 0.6, 0)
+scanBtn.Text = "ESCANEAR E COPIAR"
+scanBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+scanBtn.TextColor3 = Color3.new(1, 1, 1)
+scanBtn.Parent = frame
 
--- Função de Log
-local function addLog(msg)
-    Log = Log .. "\n" .. msg
-    status.Text = "CAPTURADO: " .. msg
-    print(msg)
-end
-
--- HOOK DE METAMÉTODO (O mais avançado para executores mobile)
--- Ele "grampeia" a conexão do jogo com o servidor
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
+-- Função para escanear sem travar o jogo
+local function escanear()
+    Log = "--- RESULTADOS DO ESCANEAMENTO ---\n"
     
-    -- Se o jogo tentar enviar uma mensagem de "Ataque" ou "Hit" para o servidor
-    if (method == "FireServer" or method == "InvokeServer") then
-        local name = tostring(self)
-        
-        -- Filtramos apenas o que interessa para o tapa
-        -- No Ability Wars costuma ser 'Hit', 'H' ou algo dentro de uma pasta de 'Remotes'
-        addLog("Remote: " .. name .. " | Args: " .. #args)
-        
-        -- Se houver argumentos (como o jogador que você bateu), vamos detalhar
-        for i, v in pairs(args) do
-            addLog("Arg["..i.."]: " .. tostring(v) .. " (" .. type(v) .. ")")
+    -- Procura no ReplicatedStorage (onde ficam os socos)
+    local alvos = {"RemoteEvent", "RemoteFunction"}
+    for _, tipo in pairs(alvos) do
+        for _, obj in pairs(game:GetDescendants()) do -- Busca profunda
+            if obj:IsA(tipo) then
+                -- Filtra nomes suspeitos de serem o soco
+                local n = obj.Name:lower()
+                if n:find("hit") or n:find("punch") or n:find("slap") or n:find("click") or n:find("attack") or n:find("h") then
+                    Log = Log .. "Encontrado: " .. obj.Name .. " em " .. obj.Parent.Name .. "\n"
+                end
+            end
         end
     end
     
-    return oldNamecall(self, ...)
-end)
-
--- Botão Copiar
-copyBtn.MouseButton1Click:Connect(function()
     if setclipboard then
         setclipboard(Log)
-        copyBtn.Text = "LOG COPIADO!"
-        task.wait(2)
-        copyBtn.Text = "COPIAR DADOS DE HIT"
+        status.Text = "Copiado! Cole no chat."
     else
-        status.Text = "Use o console do Delta para copiar."
+        status.Text = "Veja o console (F9)"
+        print(Log)
     end
-end)
+end
+
+scanBtn.MouseButton1Click:Connect(escanear)
