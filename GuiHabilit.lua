@@ -119,6 +119,26 @@ MainTab:Toggle("Anti Void", function(state)
     getgenv().AntiVoid = state
 end)
 
+-- SEÇÃO DE MOVIMENTAÇÃO
+MainTab:Section("Movimentação")
+
+MainTab:TextBox("Velocidade (Padrão: 16)", function(value)
+    local num = tonumber(value)
+    local char = game.Players.LocalPlayer.Character
+    
+    if num and char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = num
+        print("⚡ Velocidade alterada para: " .. num)
+    end
+end)
+
+MainTab:Button("Resetar Velocidade", function()
+    local char = game.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = 16
+    end
+end)
+
 -- =========================
 -- 🔥 SISTEMA ANTI VOID
 -- =========================
