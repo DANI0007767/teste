@@ -31,9 +31,7 @@ getgenv().HitboxSize = 15
 getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().AbilityESP = false
-getgenv().AutoTap = false
-getgenv().AutoTapDistance = 15 -- distância para ativar
-getgenv().AutoTapDelay = 0.05 -- velocidade dos cliques
+getgenv().AntiVoid = false
 
 -- TAB
 local MainTab = Window:Tab("Main","rbxassetid://10888331510")
@@ -42,17 +40,11 @@ local MainTab = Window:Tab("Main","rbxassetid://10888331510")
 MainTab:Section("Hitbox")
 
 MainTab:TextBox("Hitbox Size", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().HitboxSize = num
-    end
+    getgenv().HitboxSize = tonumber(value)
 end)
 
 MainTab:TextBox("Transparency", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().HitboxTransparency = num
-    end
+    getgenv().HitboxTransparency = tonumber(value)
 end)
 
 MainTab:Toggle("HBE", function(state)
@@ -120,67 +112,51 @@ MainTab:Toggle("Ability ESP", function(state)
     end
 end)
 
--- SEÇÃO COMBAT
-MainTab:Section("Combat")
+-- SEÇÃO ANTI VOID
+MainTab:Section("Anti Void")
 
-MainTab:Toggle("Auto Tap", function(state)
-    getgenv().AutoTap = state
-end)
-
-MainTab:TextBox("Tap Distance", function(value)
-    local num = tonumber(value)
-    if num then
-        getgenv().AutoTapDistance = num
-    end
+MainTab:Toggle("Anti Void", function(state)
+    getgenv().AntiVoid = state
 end)
 
 -- =========================
--- 🔥 AUTO TAP FINAL (PERFEITO)
+-- 🔥 SISTEMA ANTI VOID
 -- =========================
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("Punch")
 
-local ultimoAtaque = 0
+local LIMITE_VOID = -10
+
+local POSICOES = {
+    Vector3.new(0, 10, 0),
+    Vector3.new(20, 10, 20),
+    Vector3.new(-25, 10, 15),
+    Vector3.new(15, 10, -30),
+    Vector3.new(-10, 10, -20)
+}
 
 task.spawn(function()
-    while task.wait(0.05) do
+    while task.wait(0.1) do
 
-        if not getgenv().AutoTap then continue end
+        if not getgenv().AntiVoid then continue end
 
         local character = LocalPlayer.Character
         local hrp = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
-        if not hrp or not humanoid or humanoid.Health <= 0 then continue end
+        if hrp then
+            if hrp.Position.Y < LIMITE_VOID then
+                
+                local pos = POSICOES[math.random(1, #POSICOES)]
 
-        local menorDistancia = math.huge
-        local alvo = nil
+                -- 🔥 OFFSET PRA FICAR NATURAL
+                local offset = Vector3.new(
+                    math.random(-5,5),
+                    0,
+                    math.random(-5,5)
+                )
 
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                local enemyHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-
-                if enemyHRP then
-                    local distancia = (hrp.Position - enemyHRP.Position).Magnitude
-
-                    if distancia < menorDistancia then
-                        menorDistancia = distancia
-                        alvo = enemyHRP
-                    end
-                end
-            end
-        end
-
-        if alvo and menorDistancia <= getgenv().AutoTapDistance then
-            local agora = tick()
-
-            if agora - ultimoAtaque >= getgenv().AutoTapDelay then
-                ultimoAtaque = agora
-
-                -- 🔥 ATAQUE REAL DO JOGO (SEM BUG)
-                Remote:FireServer()
+                hrp.CFrame = CFrame.new(pos + offset)
             end
         end
 
@@ -206,6 +182,5 @@ print("  - Hitbox Size: " .. getgenv().HitboxSize)
 print("  - Hitbox Transparency: " .. getgenv().HitboxTransparency)
 print("  - HBE: " .. (getgenv().HitboxStatus and "ON" or "OFF"))
 print("  - Ability ESP: " .. (getgenv().AbilityESP and "ON" or "OFF"))
-print("  - Auto Tap: " .. (getgenv().AutoTap and "ON" or "OFF"))
-print("  - Tap Distance: " .. getgenv().AutoTapDistance)
+print("  - Anti Void: " .. (getgenv().AntiVoid and "ON" or "OFF"))
 print("📱 UI Library - Delta/Mobile 100%")
