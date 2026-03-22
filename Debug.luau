@@ -1,61 +1,58 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Log = "--- BUSCA DE REMOTES AW ---\n"
+local player = game.Players.LocalPlayer
 
--- GUI Minimalista (Sem chance de travar o touch)
+-- CONFIGURAÇÃO
+_G.AutoSlap = true
+local VELOCIDADE = 0.15 -- Ajuste aqui (0.1 é muito rápido, 0.2 é mais seguro)
+
+-- Localizando o Evento de Soco que você encontrou
+local remoteEvents = ReplicatedStorage:WaitForChild("Remote Events")
+local punchEvent = remoteEvents:WaitForChild("Punch")
+
+-- GUI SIMPLES (Mesmo estilo, mas sem travar)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_Finder"
+screenGui.Name = "AW_Final_Punch"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 120)
-frame.Position = UDim2.new(0.5, -110, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-frame.Active = true -- Permite interação
-frame.Draggable = true -- Ativa o movimento
+frame.Size = UDim2.new(0, 180, 0, 90)
+frame.Position = UDim2.new(0.5, -90, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true
 frame.Parent = screenGui
 
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, 0, 0, 60)
-status.Text = "Clique no botão para escanear os eventos do jogo"
-status.TextColor3 = Color3.new(1, 1, 1)
-status.BackgroundTransparency = 1
-status.TextWrapped = true
-status.Parent = frame
+local statusBtn = Instance.new("TextButton")
+statusBtn.Size = UDim2.new(0.9, 0, 0, 40)
+statusBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
+statusBtn.Text = "AUTO-PUNCH: ON"
+statusBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
+statusBtn.TextColor3 = Color3.new(1, 1, 1)
+statusBtn.Parent = frame
 
-local scanBtn = Instance.new("TextButton")
-scanBtn.Size = UDim2.new(0.9, 0, 0, 40)
-scanBtn.Position = UDim2.new(0.05, 0, 0.6, 0)
-scanBtn.Text = "ESCANEAR E COPIAR"
-scanBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-scanBtn.TextColor3 = Color3.new(1, 1, 1)
-scanBtn.Parent = frame
+-- Alternar Ligar/Desligar
+statusBtn.MouseButton1Click:Connect(function()
+    _G.AutoSlap = not _G.AutoSlap
+    statusBtn.Text = _G.AutoSlap and "AUTO-PUNCH: ON" or "AUTO-PUNCH: OFF"
+    statusBtn.BackgroundColor3 = _G.AutoSlap and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(150, 0, 0)
+end)
 
--- Função para escanear sem travar o jogo
-local function escanear()
-    Log = "--- RESULTADOS DO ESCANEAMENTO ---\n"
-    
-    -- Procura no ReplicatedStorage (onde ficam os socos)
-    local alvos = {"RemoteEvent", "RemoteFunction"}
-    for _, tipo in pairs(alvos) do
-        for _, obj in pairs(game:GetDescendants()) do -- Busca profunda
-            if obj:IsA(tipo) then
-                -- Filtra nomes suspeitos de serem o soco
-                local n = obj.Name:lower()
-                if n:find("hit") or n:find("punch") or n:find("slap") or n:find("click") or n:find("attack") or n:find("h") then
-                    Log = Log .. "Encontrado: " .. obj.Name .. " em " .. obj.Parent.Name .. "\n"
-                end
+-- LOOP DE DISPARO DIRETO
+task.spawn(function()
+    while true do
+        if _G.AutoSlap then
+            -- Dispara o soco diretamente pro servidor
+            punchEvent:FireServer()
+            
+            -- Opcional: Tocar a animação localmente apenas para você ver o braço mexer
+            -- Se bugar, podemos remover essa linha
+            local char = player.Character
+            if char and char:FindFirstChild("Humanoid") then
+                local anim = Instance.new("Animation")
+                anim.AnimationId = "rbxassetid://8266542505"
+                char.Humanoid:LoadAnimation(anim):Play()
             end
         end
+        task.wait(VELOCIDADE)
     end
-    
-    if setclipboard then
-        setclipboard(Log)
-        status.Text = "Copiado! Cole no chat."
-    else
-        status.Text = "Veja o console (F9)"
-        print(Log)
-    end
-end
-
-scanBtn.MouseButton1Click:Connect(escanear)
+end)
