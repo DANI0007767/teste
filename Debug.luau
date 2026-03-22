@@ -1,93 +1,70 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Log = "--- SCANNER DE IMPACTO V4 ---\n"
+local player = Players.LocalPlayer
 
--- GUI Pro (Mantendo o estilo que você gosta)
+-- CONFIGURAÇÃO
+_G.AutoSlap = true
+local RANGE_DESEJADO = 12 -- Distância do tapa
+local VELOCIDADE = 0.35 -- Cooldown padrão do jogo
+
+local punchEvent = ReplicatedStorage:WaitForChild("Remote Events"):WaitForChild("Punch")
+
+-- GUI (Limpa e funcional)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_ImpactSniffer"
+screenGui.Name = "AW_GhostHit"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 160)
-frame.Position = UDim2.new(0.5, -130, 0.15, 0)
-frame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-frame.Active = true
+frame.Size = UDim2.new(0, 180, 0, 90)
+frame.Position = UDim2.new(0.5, -90, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 frame.Draggable = true
+frame.Active = true
 frame.Parent = screenGui
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "AW - Localizador de Dano"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-title.Parent = frame
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9, 0, 0, 40)
+btn.Position = UDim2.new(0.05, 0, 0.3, 0)
+btn.Text = "GHOST HIT: ON"
+btn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.Parent = frame
 
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(0.9, 0, 0, 80)
-status.Position = UDim2.new(0.05, 0, 0.25, 0)
-status.Text = "Bata em alguém MANUALMENTE até dar dano/ragdoll..."
-status.TextColor3 = Color3.fromRGB(255, 255, 0)
-status.BackgroundTransparency = 1
-status.TextWrapped = true
-status.Parent = frame
-
-local copyBtn = Instance.new("TextButton")
-copyBtn.Size = UDim2.new(0.9, 0, 0, 35)
-copyBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
-copyBtn.Text = "COPIAR DADOS CAPTURADOS"
-copyBtn.BackgroundColor3 = Color3.fromRGB(70, 30, 120)
-copyBtn.TextColor3 = Color3.new(1, 1, 1)
-copyBtn.Parent = frame
-
--- Função de Log
-local function addLog(tipo, info)
-    local txt = string.format("[%s] %s: %s", os.date("%X"), tipo, info)
-    Log = Log .. "\n" .. txt
-    status.Text = "CAPTURA: " .. txt
-    print(txt)
-end
-
--- 1. Monitorar Remotes no momento exato (Scanner de disparos)
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-    
-    if (method == "FireServer" or method == "InvokeServer") then
-        local name = tostring(self)
-        -- Se não for o 'Punch' que já conhecemos, pode ser o de dano
-        if name ~= "Punch" then
-            addLog("REMOTE", name .. " | Args: " .. #args)
-            for i, v in pairs(args) do
-                addLog("ARG["..i.."]", tostring(v) .. " (" .. type(v) .. ")")
-            end
-        end
-    end
-    return oldNamecall(self, ...)
+btn.MouseButton1Click:Connect(function()
+    _G.AutoSlap = not _G.AutoSlap
+    btn.Text = _G.AutoSlap and "GHOST HIT: ON" or "GHOST HIT: OFF"
+    btn.BackgroundColor3 = _G.AutoSlap and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(150, 0, 0)
 end)
 
--- 2. Monitorar o que acontece no inimigo (Ragdoll/Dano)
+-- Loop de Ataque
 task.spawn(function()
     while true do
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= Players.LocalPlayer and p.Character then
-                -- Se o inimigo cair ou mudar de estado, o jogo mandou algo
-                p.Character.ChildAdded:Connect(function(child)
-                    if child.Name:lower():find("ragdoll") or child.Name:lower():find("hit") then
-                        addLog("EFEITO", "Detectado no inimigo: " .. child.Name)
+        if _G.AutoSlap and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local inimigo = v.Character
+                    local dist = (player.Character.HumanoidRootPart.Position - inimigo.HumanoidRootPart.Position).Magnitude
+                    
+                    if dist <= RANGE_DESEJADO then
+                        -- 1. Dispara o Remote de Soco (Animação/Aviso)
+                        punchEvent:FireServer()
+                        
+                        -- 2. "GHOST TOUCH": Teleporta a mão pro inimigo por 0.01s
+                        local hand = player.Character:FindFirstChild("RightHand") or player.Character:FindFirstChild("Right Arm")
+                        if hand then
+                            local originalPos = hand.CFrame
+                            hand.CFrame = inimigo.HumanoidRootPart.CFrame -- Mão vai no inimigo
+                            firetouchinterest(inimigo.HumanoidRootPart, hand, 0)
+                            task.wait(0.01)
+                            firetouchinterest(inimigo.HumanoidRootPart, hand, 1)
+                            hand.CFrame = originalPos -- Mão volta
+                        end
+                        
+                        task.wait(VELOCIDADE)
                     end
-                end)
+                end
             end
         end
-        task.wait(2)
-    end
-end)
-
-copyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(Log)
-        copyBtn.Text = "COPIADO COM SUCESSO!"
-        task.wait(2)
-        copyBtn.Text = "COPIAR DADOS CAPTURADOS"
+        task.wait(0.1)
     end
 end)
