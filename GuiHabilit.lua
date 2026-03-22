@@ -135,16 +135,17 @@ MainTab:TextBox("Tap Distance", function(value)
 end)
 
 -- =========================
--- 🔥 LÓGICA DO AUTO TAP (VERSÃO DEFINITIVA MOBILE)
+-- 🔥 AUTO TAP FINAL (PERFEITO)
 -- =========================
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("Punch")
 
 local ultimoAtaque = 0
 
 task.spawn(function()
-    while task.wait(0.08) do
+    while task.wait(0.05) do
 
         if not getgenv().AutoTap then continue end
 
@@ -159,8 +160,7 @@ task.spawn(function()
 
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer then
-                local char = player.Character
-                local enemyHRP = char and char:FindFirstChild("HumanoidRootPart")
+                local enemyHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 
                 if enemyHRP then
                     local distancia = (hrp.Position - enemyHRP.Position).Magnitude
@@ -175,26 +175,12 @@ task.spawn(function()
 
         if alvo and menorDistancia <= getgenv().AutoTapDistance then
             local agora = tick()
-            local intervalo = getgenv().AutoTapDelay or 0.18
 
-            if agora - ultimoAtaque >= intervalo then
+            if agora - ultimoAtaque >= getgenv().AutoTapDelay then
                 ultimoAtaque = agora
 
-                local tool = character:FindFirstChildOfClass("Tool")
-
-                if tool then
-                    local fired = false
-
-                    for _, v in pairs(getconnections(tool.Activated)) do
-                        v:Fire()
-                        fired = true
-                    end
-
-                    -- fallback (ESSENCIAL)
-                    if not fired then
-                        tool:Activate()
-                    end
-                end
+                -- 🔥 ATAQUE REAL DO JOGO (SEM BUG)
+                Remote:FireServer()
             end
         end
 
