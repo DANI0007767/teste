@@ -1,78 +1,78 @@
 local Players = game:GetService("Players")
-local Log = "--- MAPEAMENTO PROFUNDO DE LÓGICA ---"
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
 
--- GUI para Copiar (Sempre no seu estilo)
+-- CONFIGURAÇÃO
+_G.AutoSlap = true
+local TAMANHO_HITBOX = Vector3.new(15, 15, 15) -- O quão longe o tapa alcança
+local COOLDOWN = 0.4
+
+local punchEvent = ReplicatedStorage:WaitForChild("Remote Events"):WaitForChild("Punch")
+
+-- GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_DeepScanner"
+screenGui.Name = "AW_Reach_V6"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 160)
-frame.Position = UDim2.new(0.5, -130, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
-frame.Active = true
+frame.Size = UDim2.new(0, 180, 0, 90)
+frame.Position = UDim2.new(0.5, -90, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
 frame.Draggable = true
+frame.Active = true
 frame.Parent = screenGui
 
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, 0, 0, 100)
-status.Text = "Clique para escanear Scripts e Módulos de Dano..."
-status.TextColor3 = Color3.new(1, 0, 0)
-status.BackgroundTransparency = 1
-status.TextWrapped = true
-status.Parent = frame
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9, 0, 0, 40)
+btn.Position = UDim2.new(0.05, 0, 0.3, 0)
+btn.Text = "REACH: ATIVADO"
+btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.Parent = frame
 
-local scanBtn = Instance.new("TextButton")
-scanBtn.Size = UDim2.new(0.9, 0, 0, 40)
-scanBtn.Position = UDim2.new(0.05, 0, 0.7, 0)
-scanBtn.Text = "ESCANEAR TUDO"
-scanBtn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
-scanBtn.TextColor3 = Color3.new(1, 1, 1)
-scanBtn.Parent = frame
+btn.MouseButton1Click:Connect(function()
+    _G.AutoSlap = not _G.AutoSlap
+    btn.Text = _G.AutoSlap and "REACH: ATIVADO" or "REACH: DESATIVADO"
+    btn.BackgroundColor3 = _G.AutoSlap and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(50, 50, 50)
+end)
 
-local function deepScan()
-    Log = "--- RESULTADOS DA BUSCA AVANÇADA ---\n"
-    
-    -- 1. Buscar em Scripts que rodam no Player
-    local locais = {Players.LocalPlayer.PlayerScripts, Players.LocalPlayer.PlayerGui, Players.LocalPlayer.Character}
-    
-    for _, localizacao in pairs(locais) do
-        if localizacao then
-            for _, obj in pairs(localizacao:GetDescendants()) do
-                if obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
-                    local name = obj.Name:lower()
-                    -- Filtros de palavras-chave que o jogo usaria para o Ragdoll ou Hit
-                    if name:find("rag") or name:find("hit") or name:find("clien") or name:find("fight") or name:find("combat") or name:find("damage") then
-                        Log = Log .. "[SCRIPT] " .. obj.Name .. " | Local: " .. obj.Parent.Name .. " (" .. obj.ClassName .. ")\n"
-                    end
-                end
-            end
+-- Função para estender a mão
+local function expandirMao()
+    local char = player.Character
+    if char then
+        local hand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+        if hand then
+            hand.Size = TAMANHO_HITBOX
+            hand.Transparency = 0.8 -- Fica um pouco visível para você ver o alcance (mude para 1 para invisível)
+            hand.CanCollide = false
+            hand.Massless = true
         end
-    end
-
-    -- 2. Buscar por "TouchInterest" (Colisão física de dano)
-    for _, v in pairs(Players.LocalPlayer.Character:GetDescendants()) do
-        if v:IsA("TouchInterest") then
-            Log = Log .. "[TOUCH] Detectado em: " .. v.Parent.Name .. "\n"
-        end
-    end
-
-    -- 3. Buscar valores ocultos de Range/Distância
-    for _, v in pairs(game.ReplicatedStorage:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("IntValue") then
-            if v.Name:lower():find("range") or v.Name:lower():find("dist") then
-                Log = Log .. "[VALOR] " .. v.Name .. ": " .. v.Value .. "\n"
-            end
-        end
-    end
-
-    if setclipboard then
-        setclipboard(Log)
-        status.Text = "TUDO COPIADO! Cole no chat."
-    else
-        status.Text = "Erro ao copiar automaticamente."
-        print(Log)
     end
 end
 
-scanBtn.MouseButton1Click:Connect(deepScan)
+-- Loop de Soco
+task.spawn(function()
+    while true do
+        if _G.AutoSlap then
+            expandirMao() -- Garante que a mão está grande
+            
+            -- Dispara o soco
+            punchEvent:FireServer()
+            
+            -- Animação
+            local hum = player.Character:FindFirstChild("Humanoid")
+            if hum then
+                local anim = Instance.new("Animation")
+                anim.AnimationId = "rbxassetid://8266542505"
+                hum:LoadAnimation(anim):Play()
+            end
+            
+            task.wait(COOLDOWN)
+        else
+            -- Reseta a mão se desligar
+            local hand = player.Character and (player.Character:FindFirstChild("RightHand") or player.Character:FindFirstChild("Right Arm"))
+            if hand then hand.Size = Vector3.new(1, 1, 1) hand.Transparency = 0 end
+        end
+        task.wait(0.1)
+    end
+end)
