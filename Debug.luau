@@ -1,83 +1,80 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
+local Log = "--- BUSCA DE HITBOX REAL ---\n"
 
--- CONFIGURAÇÃO
-_G.AutoSlap = true
-local DISTANCIA_HIT = 12 -- Distância para o soco pegar (Range)
-local COOLDOWN = 0.35 -- Tempo entre socos (Aumentado para o servidor aceitar)
-
--- Localizando o Evento
-local remoteEvents = ReplicatedStorage:WaitForChild("Remote Events")
-local punchEvent = remoteEvents:WaitForChild("Punch")
-
--- Função para achar o inimigo mais próximo
-local function getClosestPlayer()
-    local closest = nil
-    local dist = DISTANCIA_HIT
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local d = (player.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-            if d < dist then
-                dist = d
-                closest = p.Character
-            end
-        end
-    end
-    return closest
-end
-
--- GUI (Mesmo estilo, funcional e móvel)
+-- GUI Estilizada
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_Killaura_V4"
+screenGui.Name = "AW_HitHunter"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 180, 0, 90)
-frame.Position = UDim2.new(0.5, -90, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.Size = UDim2.new(0, 250, 0, 150)
+frame.Position = UDim2.new(0.5, -125, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
-local statusBtn = Instance.new("TextButton")
-statusBtn.Size = UDim2.new(0.9, 0, 0, 40)
-statusBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
-statusBtn.Text = "KILLAURA: ON"
-statusBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-statusBtn.TextColor3 = Color3.new(1, 1, 1)
-statusBtn.Parent = frame
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0, 100)
+status.Text = "Aguardando Hit... Bata em alguém manualmente AGORA!"
+status.TextColor3 = Color3.new(1, 1, 0)
+status.BackgroundTransparency = 1
+status.TextWrapped = true
+status.Parent = frame
 
-statusBtn.MouseButton1Click:Connect(function()
-    _G.AutoSlap = not _G.AutoSlap
-    statusBtn.Text = _G.AutoSlap and "KILLAURA: ON" or "KILLAURA: OFF"
-    statusBtn.BackgroundColor3 = _G.AutoSlap and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(150, 0, 0)
-end)
+local copyBtn = Instance.new("TextButton")
+copyBtn.Size = UDim2.new(0.9, 0, 0, 35)
+copyBtn.Position = UDim2.new(0.05, 0, 0.7, 0)
+copyBtn.Text = "COPIAR DADOS DE IMPACTO"
+copyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+copyBtn.TextColor3 = Color3.new(1, 1, 1)
+copyBtn.Parent = frame
 
--- LOOP PRINCIPAL
+-- Função para registrar achados
+local function addLog(msg)
+    Log = Log .. "\n[" .. os.date("%X") .. "] " .. msg
+    status.Text = "DETECTADO: " .. msg
+    print(msg)
+end
+
+-- 1. Monitorar o braço (Right Arm / Right Hand)
 task.spawn(function()
     while true do
-        if _G.AutoSlap and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local target = getClosestPlayer()
-            
-            -- Se tiver alguém perto, a gente ataca
-            if target then
-                -- 1. Dispara o soco (O servidor agora deve validar pois tem um alvo perto)
-                -- Tentamos disparar o Punch passando o alvo, caso o jogo peça isso
-                punchEvent:FireServer(target.HumanoidRootPart) 
-                punchEvent:FireServer() -- E dispara puro também por garantia
-                
-                -- 2. Animação Visual
-                local hum = player.Character:FindFirstChild("Humanoid")
-                if hum then
-                    local anim = Instance.new("Animation")
-                    anim.AnimationId = "rbxassetid://8266542505"
-                    hum:LoadAnimation(anim):Play()
+        local char = player.Character
+        if char then
+            local hand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+            if hand then
+                -- Verifica se surgiu algum "TouchInterest" ou "Remote" dentro da mão
+                for _, obj in pairs(hand:GetChildren()) do
+                    if obj:IsA("RemoteEvent") or obj:IsA("BindableEvent") then
+                        addLog("Evento na Mão: " .. obj.Name)
+                    end
                 end
-                
-                task.wait(COOLDOWN) -- Espera o tempo do soco terminar
             end
         end
-        task.wait(0.1) -- Procura inimigos 10 vezes por segundo
+        task.wait(0.5)
+    end
+end)
+
+-- 2. Monitorar mudanças globais no momento do hit
+game:GetService("RunService").Stepped:Connect(function()
+    -- Se um Remote chamado 'Hit' ou algo assim aparecer em qualquer lugar, a gente pega
+    for _, v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+        if v:IsA("RemoteEvent") and (v.Name:lower():find("hit") or v.Name:lower():find("damage")) then
+            -- Só loga se for algo novo
+            if not Log:find(v.Name) then
+                addLog("Novo Remote Detectado: " .. v.Name .. " em " .. v.Parent.Name)
+            end
+        end
+    end
+end)
+
+copyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(Log)
+        copyBtn.Text = "COPIADO!"
+        task.wait(2)
+        copyBtn.Text = "COPIAR DADOS"
     end
 end)
