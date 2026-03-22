@@ -122,20 +122,64 @@ end)
 -- SEÇÃO DE MOVIMENTAÇÃO
 MainTab:Section("Movimentação")
 
-MainTab:TextBox("Velocidade (Padrão: 16)", function(value)
+-- Variáveis de controle
+getgenv().SpeedEnabled = false
+getgenv().TargetSpeed = 20 -- Valor inicial sugerido
+
+-- Input de Velocidade
+MainTab:TextBox("Definir Velocidade", function(value)
     local num = tonumber(value)
-    local char = game.Players.LocalPlayer.Character
-    
-    if num and char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = num
-        print("⚡ Velocidade alterada para: " .. num)
+    if num then
+        getgenv().TargetSpeed = num
+        -- Se a box já estiver ligada, aplica na hora
+        if getgenv().SpeedEnabled then
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = num
+            end
+        end
     end
 end)
 
-MainTab:Button("Resetar Velocidade", function()
+-- A "Chave Mestre"
+MainTab:Toggle("Ativar Modificador de Velocidade", function(state)
+    getgenv().SpeedEnabled = state
+    
     local char = game.Players.LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = 16
+    local hum = char and char:FindFirstChild("Humanoid")
+    
+    if not state then
+        -- BOX DESLIGADA: Devolve o controle total ao jogo
+        if hum then
+            -- Aqui o ideal é 20, que é o padrão do Habilit Wars
+            hum.WalkSpeed = 20 
+        end
+        print("🔌 Modificador de Velocidade: DESLIGADO")
+    else
+        -- BOX LIGADA: Aplica o valor do input imediatamente
+        if hum then
+            hum.WalkSpeed = getgenv().TargetSpeed
+        end
+        print("⚡ Modificador de Velocidade: ATIVADO (" .. getgenv().TargetSpeed .. ")")
+    end
+end)
+
+-- Loop de Persistência (Só age se a Box estiver ON)
+task.spawn(function()
+    while true do
+        task.wait(0.3) -- Checagem rápida para quando você morrer
+        
+        if getgenv().SpeedEnabled then
+            pcall(function()
+                local char = game.Players.LocalPlayer.Character
+                local hum = char and char:FindFirstChild("Humanoid")
+                
+                -- Se a velocidade estiver diferente do que você quer, ele força o valor
+                if hum and hum.WalkSpeed ~= getgenv().TargetSpeed then
+                    hum.WalkSpeed = getgenv().TargetSpeed
+                end
+            end)
+        end
     end
 end)
 
