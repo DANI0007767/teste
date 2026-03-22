@@ -1,86 +1,78 @@
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
+local Log = "--- MAPEAMENTO PROFUNDO DE LÓGICA ---"
 
--- CONFIGURAÇÃO
-_G.Aura = true
-local RANGE = 15 -- Alcance do hit
-local COOLDOWN = 0.3 -- Velocidade que o servidor aceita
-
-local punchEvent = ReplicatedStorage:WaitForChild("Remote Events"):WaitForChild("Punch")
-
--- GUI (Estilo que você prefere)
+-- GUI para Copiar (Sempre no seu estilo)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_SecretHit"
+screenGui.Name = "AW_DeepScanner"
 screenGui.Parent = game.CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 180, 0, 90)
-frame.Position = UDim2.new(0.5, -90, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+frame.Size = UDim2.new(0, 260, 0, 160)
+frame.Position = UDim2.new(0.5, -130, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 40)
-btn.Position = UDim2.new(0.05, 0, 0.3, 0)
-btn.Text = "SECRET AURA: ON"
-btn.BackgroundColor3 = Color3.fromRGB(100, 0, 255)
-btn.TextColor3 = Color3.new(1, 1, 1)
-btn.Parent = frame
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0, 100)
+status.Text = "Clique para escanear Scripts e Módulos de Dano..."
+status.TextColor3 = Color3.new(1, 0, 0)
+status.BackgroundTransparency = 1
+status.TextWrapped = true
+status.Parent = frame
 
-btn.MouseButton1Click:Connect(function()
-    _G.Aura = not _G.Aura
-    btn.Text = _G.Aura and "SECRET AURA: ON" or "OFF"
-    btn.BackgroundColor3 = _G.Aura and Color3.fromRGB(100, 0, 255) or Color3.fromRGB(50, 50, 50)
-end)
+local scanBtn = Instance.new("TextButton")
+scanBtn.Size = UDim2.new(0.9, 0, 0, 40)
+scanBtn.Position = UDim2.new(0.05, 0, 0.7, 0)
+scanBtn.Text = "ESCANEAR TUDO"
+scanBtn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+scanBtn.TextColor3 = Color3.new(1, 1, 1)
+scanBtn.Parent = frame
 
--- Função para o Hit Invisível
-local function hitInvisivel(targetChar)
-    local hand = player.Character:FindFirstChild("RightHand") or player.Character:FindFirstChild("Right Arm")
-    local targetPart = targetChar:FindFirstChild("HumanoidRootPart")
+local function deepScan()
+    Log = "--- RESULTADOS DA BUSCA AVANÇADA ---\n"
     
-    if hand and targetPart then
-        -- O SEGREDO: Dispara o soco e o toque ao mesmo tempo
-        punchEvent:FireServer()
-        
-        -- firetouchinterest simula o impacto físico
-        -- Tentamos em múltiplas partes para garantir o ragdoll
-        firetouchinterest(targetPart, hand, 0)
-        task.wait()
-        firetouchinterest(targetPart, hand, 1)
-        
-        local head = targetChar:FindFirstChild("Head")
-        if head then
-            firetouchinterest(head, hand, 0)
-            firetouchinterest(head, hand, 1)
-        end
-    end
-end
-
--- Loop Principal
-task.spawn(function()
-    while true do
-        if _G.Aura and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local closest = nil
-            local lastDist = RANGE
-            
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local dist = (player.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                    if dist < lastDist then
-                        lastDist = dist
-                        closest = p.Character
+    -- 1. Buscar em Scripts que rodam no Player
+    local locais = {Players.LocalPlayer.PlayerScripts, Players.LocalPlayer.PlayerGui, Players.LocalPlayer.Character}
+    
+    for _, localizacao in pairs(locais) do
+        if localizacao then
+            for _, obj in pairs(localizacao:GetDescendants()) do
+                if obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
+                    local name = obj.Name:lower()
+                    -- Filtros de palavras-chave que o jogo usaria para o Ragdoll ou Hit
+                    if name:find("rag") or name:find("hit") or name:find("clien") or name:find("fight") or name:find("combat") or name:find("damage") then
+                        Log = Log .. "[SCRIPT] " .. obj.Name .. " | Local: " .. obj.Parent.Name .. " (" .. obj.ClassName .. ")\n"
                     end
                 end
             end
-            
-            if closest then
-                hitInvisivel(closest)
-                task.wait(COOLDOWN)
+        end
+    end
+
+    -- 2. Buscar por "TouchInterest" (Colisão física de dano)
+    for _, v in pairs(Players.LocalPlayer.Character:GetDescendants()) do
+        if v:IsA("TouchInterest") then
+            Log = Log .. "[TOUCH] Detectado em: " .. v.Parent.Name .. "\n"
+        end
+    end
+
+    -- 3. Buscar valores ocultos de Range/Distância
+    for _, v in pairs(game.ReplicatedStorage:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            if v.Name:lower():find("range") or v.Name:lower():find("dist") then
+                Log = Log .. "[VALOR] " .. v.Name .. ": " .. v.Value .. "\n"
             end
         end
-        task.wait(0.1)
     end
-end)
+
+    if setclipboard then
+        setclipboard(Log)
+        status.Text = "TUDO COPIADO! Cole no chat."
+    else
+        status.Text = "Erro ao copiar automaticamente."
+        print(Log)
+    end
+end
+
+scanBtn.MouseButton1Click:Connect(deepScan)
