@@ -28,6 +28,7 @@ getgenv().TargetSpeed = 20
 getgenv().Heal70 = false 
 getgenv().Heal50 = false
 getgenv().AimlockStatus = false
+getgenv().AbilityESP = false
 
 local Camera = workspace.CurrentCamera
 local LocalPlayer = game.Players.LocalPlayer 
@@ -85,6 +86,37 @@ MainTab:Toggle("Ativar HBE", function(state)
     end
 end)
 MainTab:Toggle("Ativar Anti Void", function(state) getgenv().AntiVoid = state end)
+
+-- ==========================================
+-- 👁️ ESP DE HABILIDADES
+-- ==========================================
+MainTab:Section("Ability ESP")
+
+MainTab:Toggle("Ability ESP", function(state)
+    getgenv().AbilityESP = state
+
+    if not state then
+        -- REMOVE ESP
+        for _, player in pairs(game.Players:GetPlayers()) do
+            local char = player.Character
+            if char and char:FindFirstChild("Head") then
+                local esp = char.Head:FindFirstChild("AbilityDisplay")
+                if esp then
+                    esp:Destroy()
+                end
+            end
+        end
+    else
+        -- ATIVA ESP
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
+                if _G.HabilitWars and _G.HabilitWars.Logic then
+                    _G.HabilitWars.Logic.setupJogador(player)
+                end
+            end
+        end
+    end
+end)
 
 -- ==========================================
 -- 🪄 ABA: MAGO
