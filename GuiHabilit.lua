@@ -107,14 +107,27 @@ MainTab:Toggle("Ability ESP", function(state)
             end
         end
     else
-        -- ATIVA ESP
+        -- ATIVA ESP (CORREÇÃO PROFISSIONAL)
         for _, player in pairs(game.Players:GetPlayers()) do
             if player ~= game.Players.LocalPlayer then
-                if _G.HabilitWars and _G.HabilitWars.Logic then
+                if player.Character then
+                    _G.HabilitWars.Logic.setupJogador(player)
+                else
+                    player.CharacterAdded:Wait()
                     _G.HabilitWars.Logic.setupJogador(player)
                 end
             end
         end
+    end
+end)
+
+-- 🔥 BÔNUS: PEGA PLAYERS QUE ENTRAM DEPOIS
+game.Players.PlayerAdded:Connect(function(player)
+    if getgenv().AbilityESP then
+        player.CharacterAdded:Connect(function()
+            task.wait(1)
+            _G.HabilitWars.Logic.setupJogador(player)
+        end)
     end
 end)
 
