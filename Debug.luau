@@ -1,78 +1,81 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
+-- MINI GUI DE TESTE (AUTO-MAGO)
+local ScreenGui = Instance.new("ScreenGui")
+local Toggle = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+Toggle.Parent = ScreenGui
+Toggle.BackgroundColor3 = Color3.fromRGB(80, 0, 200)
+Toggle.Position = UDim2.new(0, 100, 0, 150)
+Toggle.Size = UDim2.new(0, 120, 0, 40)
+Toggle.Text = "Auto-Heal: OFF"
+Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.Draggable = true
+
+local Ativado = false
 
 -- CONFIGURAÇÃO
-_G.AutoSlap = true
-local TAMANHO_HITBOX = Vector3.new(15, 15, 15) -- O quão longe o tapa alcança
-local COOLDOWN = 0.4
+local LIMITE_VIDA_PERCENT = 0.7 -- 70%
+local MANA_MINIMA = 30
 
-local punchEvent = ReplicatedStorage:WaitForChild("Remote Events"):WaitForChild("Punch")
+local player = game.Players.LocalPlayer
 
--- GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AW_Reach_V6"
-screenGui.Parent = game.CoreGui
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 180, 0, 90)
-frame.Position = UDim2.new(0.5, -90, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
-frame.Draggable = true
-frame.Active = true
-frame.Parent = screenGui
-
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 40)
-btn.Position = UDim2.new(0.05, 0, 0.3, 0)
-btn.Text = "REACH: ATIVADO"
-btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-btn.TextColor3 = Color3.new(1, 1, 1)
-btn.Parent = frame
-
-btn.MouseButton1Click:Connect(function()
-    _G.AutoSlap = not _G.AutoSlap
-    btn.Text = _G.AutoSlap and "REACH: ATIVADO" or "REACH: DESATIVADO"
-    btn.BackgroundColor3 = _G.AutoSlap and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(50, 50, 50)
-end)
-
--- Função para estender a mão
-local function expandirMao()
-    local char = player.Character
-    if char then
-        local hand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
-        if hand then
-            hand.Size = TAMANHO_HITBOX
-            hand.Transparency = 0.8 -- Fica um pouco visível para você ver o alcance (mude para 1 para invisível)
-            hand.CanCollide = false
-            hand.Massless = true
+-- FUNÇÃO PARA PEGAR O PRIMEIRO NÚMERO DA BARRA AZUL
+local function checarMana()
+    local mana = 0
+    pcall(function()
+        -- Procura a barra de mana em toda a PlayerGui
+        for _, v in pairs(player.PlayerGui:GetDescendants()) do
+            if v:IsA("TextLabel") and (v.Text:find("Mana") or v.Parent.Name:find("Mana")) then
+                -- Pega o primeiro conjunto de números que aparecer (Ex: "100" de "100/100")
+                local valor = v.Text:match("(%d+)")
+                if valor then
+                    mana = tonumber(valor)
+                end
+            end
         end
+    end)
+    return mana
+end
+
+-- FUNÇÃO PARA USAR A HABILIDADE
+local function usarR()
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
+                   and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("Ability")
+    
+    if remote then
+        remote:FireServer("R")
     end
 end
 
--- Loop de Soco
+-- LOGICA PRINCIPAL
+Toggle.MouseButton1Click:Connect(function()
+    Ativado = not Ativado
+    Toggle.Text = Ativado and "Auto-Heal: ON" or "Auto-Heal: OFF"
+    Toggle.BackgroundColor3 = Ativado and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+end)
+
 task.spawn(function()
-    while true do
-        if _G.AutoSlap then
-            expandirMao() -- Garante que a mão está grande
+    while task.wait(0.5) do
+        if Ativado then
+            local char = player.Character
+            local hum = char and char:FindFirstChild("Humanoid")
             
-            -- Dispara o soco
-            punchEvent:FireServer()
-            
-            -- Animação
-            local hum = player.Character:FindFirstChild("Humanoid")
-            if hum then
-                local anim = Instance.new("Animation")
-                anim.AnimationId = "rbxassetid://8266542505"
-                hum:LoadAnimation(anim):Play()
+            if hum and hum.Health > 0 then
+                local manaAtual = checarMana()
+                local vidaPercent = hum.Health / hum.MaxHealth
+                
+                -- REGRA DE OURO: Mana em primeiro lugar
+                if manaAtual >= MANA_MINIMA then
+                    -- Se tem mana, verifica a vida
+                    if vidaPercent <= LIMITE_VIDA_PERCENT then
+                        usarR()
+                        task.wait(1) -- Cooldown para não spammar
+                    end
+                else
+                    -- Se tiver menos de 30, ele ignora a vida e não faz nada
+                    print("Mana muito baixa para curar: " .. manaAtual)
+                end
             end
-            
-            task.wait(COOLDOWN)
-        else
-            -- Reseta a mão se desligar
-            local hand = player.Character and (player.Character:FindFirstChild("RightHand") or player.Character:FindFirstChild("Right Arm"))
-            if hand then hand.Size = Vector3.new(1, 1, 1) hand.Transparency = 0 end
         end
-        task.wait(0.1)
     end
 end)
