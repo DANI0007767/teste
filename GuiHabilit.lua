@@ -237,11 +237,13 @@ local function ativarCura()
 end
 
 -- ==========================================
--- 🔄 LOOP COM TOGGLES (AQUI É A MÁGICA)
+-- 🔄 LOOP COM TOGGLES (ULTRA RÁPIDO + ESTÁVEL)
 -- ==========================================
 
+local ultimoUso = 0
+
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(0.03) do -- 🔥 REFLEXO INSANO
         if character and humanoid and humanoid.Health > 0 then
             
             local vidaAtual = humanoid.Health
@@ -249,20 +251,19 @@ task.spawn(function()
 
             local limite = nil
 
-            -- DEFINE QUAL SISTEMA TÁ ATIVO
             if getgenv().Heal70 then
                 limite = 0.7
             elseif getgenv().Heal50 then
                 limite = 0.5
             end
 
-            -- EXECUTA A LÓGICA ORIGINAL
-            if limite 
+            if limite
             and vidaAtual <= humanoid.MaxHealth * limite
-            and manaAtual >= CUSTO_MANA then
+            and manaAtual >= CUSTO_MANA
+            and tick() - ultimoUso >= COOLDOWN then
                 
+                ultimoUso = tick()
                 ativarCura()
-                task.wait(COOLDOWN)
             end
         end
     end
@@ -277,13 +278,46 @@ task.spawn(function()
     end
 end)
 
--- Loop Anti-Void
+-- ==========================================
+-- 🛡️ ANTI VOID PROFISSIONAL
+-- ==========================================
+
+local POSICOES_SEGURAS = {
+    Vector3.new(0, 5, 0),
+    Vector3.new(20, 5, 20),
+    Vector3.new(-25, 5, 15),
+    Vector3.new(15, 5, -30),
+    Vector3.new(-10, 5, -20)
+}
+
 task.spawn(function()
-    while task.wait(0.3) do
+    while task.wait(0.1) do
         if getgenv().AntiVoid then
             pcall(function()
-                local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if hrp and hrp.Position.Y < -20 then hrp.CFrame = CFrame.new(0, 50, 0) end
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+                if hrp and hrp.Position.Y < 15 then
+                    -- 🔥 escolhe posição aleatória
+                    local destino = POSICOES_SEGURAS[math.random(1, #POSICOES_SEGURAS)]
+
+                    -- 🔥 EXTRA: offset humano (não cair sempre no mesmo lugar)
+                    local offset = Vector3.new(
+                        math.random(-5,5),
+                        0,
+                        math.random(-5,5)
+                    )
+
+                    -- 🔥 para TUDO (queda, rotação, impulso) - MELHOR QUE Velocity
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    hrp.AssemblyAngularVelocity = Vector3.zero
+
+                    -- 🔥 UPGRADE INSANO: micro delay para teleporte humano
+                    task.wait() -- 1 frame de pausa
+
+                    -- 🔥 teleporte LIMPO (sem efeito "snap" bruto)
+                    hrp.CFrame = CFrame.new(destino + offset)
+                end
             end)
         end
     end
