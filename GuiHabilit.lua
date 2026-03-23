@@ -104,14 +104,33 @@ MagoTab:Toggle("Ativar Botão Q (Aimlock)", function(state)
             local QGui = Instance.new("ScreenGui", game.CoreGui)
             QGui.Name = "Q_ButtonGui"
             local QBtn = Instance.new("TextButton", QGui)
-            QBtn.Size = UDim2.new(0, 65, 0, 65)
-            QBtn.Position = UDim2.new(0.8, 0, 0.4, 0)
-            QBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+            QBtn.Size = UDim2.new(0, 60, 0, 60)
+            QBtn.Position = UDim2.new(0.85, 0, 0.5, 0)
+
+            QBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+            QBtn.BackgroundTransparency = 0.2
+
             QBtn.Text = "Q"
-            QBtn.TextColor3 = Color3.new(1,1,1)
+            QBtn.TextScaled = true
+            QBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
+
+            QBtn.Font = Enum.Font.GothamBold
+
+            -- borda arredondada
+            local corner = Instance.new("UICorner", QBtn)
+            corner.CornerRadius = UDim.new(1,0)
+
+            -- sombra leve
+            local stroke = Instance.new("UIStroke", QBtn)
+            stroke.Thickness = 2
+            stroke.Color = Color3.fromRGB(0, 170, 255)
+
             QBtn.Draggable = true
             QBtn.Active = true
-            QBtn.MouseButton1Click:Connect(function() dispararQ() end)
+
+            QBtn.MouseButton1Click:Connect(function()
+                dispararQ()
+            end)
         end
     elseif guiExistente then guiExistente:Destroy() end
 end)
@@ -239,39 +258,74 @@ local function getClosestPlayer()
                     shortestDistance = distance
                 end
             end
-        end
-    end
-    return target
-end
 
-local function dispararQ()
-    local alvo = getClosestPlayer()
-    
-    if alvo then
+                -- EXECUTA A LÓGICA ORIGINAL
+                if limite 
+                and vidaAtual <= humanoid.MaxHealth * limite
+                and manaAtual >= CUSTO_MANA then
+                    
+                    ativarCura()
+                    task.wait(COOLDOWN)
+                end
+            end
+        end
+    end)
+
+    -- ==========================================
+    -- ❄️ FUNÇÕES DO AIM-LOCK
+    -- ==========================================
+
+    local function getClosestPlayer()
+        local target = nil
+        local shortestDistance = math.huge
+        local mousePos = Camera.ViewportSize / 2
+
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+                local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local distance = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                    if distance < shortestDistance then
+                        target = p.Character.HumanoidRootPart
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+        return target
+    end
+
+    local function dispararQ()
+        local alvo = getClosestPlayer()
+        if not alvo then return end
+
         local oldCFrame = Camera.CFrame
+
+        -- trava rápido no alvo
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvo.Position)
-        
+
+        -- pequena espera pra registrar (IMPORTANTE)
+        task.wait(0.05)
+
+        -- ativa Q igual cura
         local abilityGui = LocalPlayer.PlayerGui:FindFirstChild("Ability Buttons", true)
-        local botaoQ = abilityGui and abilityGui:FindFirstChild("Q")
-        
+        local botaoQ = abilityGui and abilityGui:FindFirstChild("Q", true)
+
         if botaoQ then
-            for _, connection in pairs(getconnections(botaoQ.Activated)) do connection:Fire() end
+            local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+            for _, eventName in pairs(events) do
+                if botaoQ[eventName] then
+                    for _, connection in pairs(getconnections(botaoQ[eventName])) do
+                        connection:Fire()
+                    end
+                end
+            end
         end
-        
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and 
-                       game:GetService("ReplicatedStorage").Remotes:FindFirstChild("Ability")
-        if remote then
-            remote:FireServer("Q")
-        end
-        
-        print("❄️ Cristal disparado em: " .. alvo.Parent.Name)
-    end
-end
 
--- ==========================================
--- 🔄 LOOPS DE SISTEMA
--- ==========================================
-
+        -- remote (backup)
+        local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+        if remoteFolder and remoteFolder:FindFirstChild("Ability") then
+            remoteFolder.Ability:FireServer("Q")
 -- Loop Speed
 task.spawn(function()
     while task.wait(0.4) do
