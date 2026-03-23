@@ -71,21 +71,27 @@ MagoTab:Toggle("Ativar Speed (Mago)", function(state) getgenv().SpeedEnabled = s
 
 MagoTab:Section("Automação de Cura")
 
--- TOGGLE 70%
-local T70 = MagoTab:Toggle("Auto Heal (Abaixo de 70%)", function(state)
+-- 70%
+MagoTab:Toggle("Auto Heal 70%", function(state)
     getgenv().Heal70 = state
-    if state and getgenv().Heal50 then
+    
+    if state then
         getgenv().Heal50 = false
-        print("🪄 Mago: Modo 70% Ativo (50% desligado)")
+        print("🟢 Heal 70% ON")
+    else
+        print("🔴 Heal 70% OFF")
     end
 end)
 
--- TOGGLE 50%
-local T50 = MagoTab:Toggle("Auto Heal (Abaixo de 50%)", function(state)
+-- 50%
+MagoTab:Toggle("Auto Heal 50%", function(state)
     getgenv().Heal50 = state
-    if state and getgenv().Heal70 then
+    
+    if state then
         getgenv().Heal70 = false
-        print("🪄 Mago: Modo 50% Ativo (70% desligado)")
+        print("🟢 Heal 50% ON")
+    else
+        print("🔴 Heal 50% OFF")
     end
 end)
 
@@ -111,13 +117,12 @@ MagoTab:Toggle("Ativar Botão Q (Aimlock)", function(state)
 end)
 
 -- ==========================================
--- 🧠 SISTEMA DE CURA BASE (INTEGRADO)
+-- 🧠 AUTO HEAL (BASE ORIGINAL + TOGGLES)
 -- ==========================================
 
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-local LIMITE_VIDA_70 = 0.7
-local LIMITE_VIDA_50 = 0.5
 local CUSTO_MANA = 30
 local COOLDOWN = 1
 
@@ -125,13 +130,16 @@ local character
 local humanoid
 local botaoR
 
--- Atualiza ao respawn
+-- Atualiza ao respawn (IGUAL AO SEU)
 local function atualizarTudo(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
 
-    local abilityGui = player.PlayerGui:WaitForChild("Ability Buttons")
-    botaoR = abilityGui:WaitForChild("R")
+    local abilityGui = player.PlayerGui:FindFirstChild("Ability Buttons", true)
+
+    if abilityGui then
+        botaoR = abilityGui:FindFirstChild("R", true)
+    end
 end
 
 if player.Character then
@@ -140,7 +148,7 @@ end
 
 player.CharacterAdded:Connect(atualizarTudo)
 
--- Mana
+-- Mana (IGUAL AO SEU)
 local function obterMana()
     local manaBar = player.PlayerGui:FindFirstChild("ManaBar", true)
     if manaBar then
@@ -149,17 +157,22 @@ local function obterMana()
             return tonumber(texto.Text:match("%d+")) or 0
         end
     end
-    return 0
+    return 100
 end
 
--- Cura (ORIGINAL)
+-- Cura (ANTI-BUG PROFISSIONAL)
 local function ativarCura()
-    local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+    local abilityGui = player.PlayerGui:FindFirstChild("Ability Buttons", true)
+    local botaoR = abilityGui and abilityGui:FindFirstChild("R", true)
 
-    for _, eventName in pairs(events) do
-        if botaoR and botaoR[eventName] then
-            for _, connection in pairs(getconnections(botaoR[eventName])) do
-                connection:Fire()
+    if botaoR then
+        local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+
+        for _, eventName in pairs(events) do
+            if botaoR[eventName] then
+                for _, connection in pairs(getconnections(botaoR[eventName])) do
+                    connection:Fire()
+                end
             end
         end
     end
@@ -171,7 +184,41 @@ local function ativarCura()
             remote:FireServer("R")
         end
     end
+
+    print("🪄 CURA ATIVADA")
 end
+
+-- ==========================================
+-- 🔄 LOOP COM TOGGLES (AQUI É A MÁGICA)
+-- ==========================================
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if character and humanoid and humanoid.Health > 0 then
+            
+            local vidaAtual = humanoid.Health
+            local manaAtual = obterMana()
+
+            local limite = nil
+
+            -- DEFINE QUAL SISTEMA TÁ ATIVO
+            if getgenv().Heal70 then
+                limite = 0.7
+            elseif getgenv().Heal50 then
+                limite = 0.5
+            end
+
+            -- EXECUTA A LÓGICA ORIGINAL
+            if limite 
+            and vidaAtual <= humanoid.MaxHealth * limite
+            and manaAtual >= CUSTO_MANA then
+                
+                ativarCura()
+                task.wait(COOLDOWN)
+            end
+        end
+    end
+end)
 
 -- ==========================================
 -- ❄️ FUNÇÕES DO AIM-LOCK
@@ -224,28 +271,6 @@ end
 -- ==========================================
 -- 🔄 LOOPS DE SISTEMA
 -- ==========================================
-
-task.spawn(function()
-    while task.wait(0.3) do
-        if humanoid and humanoid.Health > 0 then
-            local vidaAtual = humanoid.Health
-            local manaAtual = obterMana()
-
-            local limite = nil
-
-            if getgenv().Heal70 then
-                limite = LIMITE_VIDA_70
-            elseif getgenv().Heal50 then
-                limite = LIMITE_VIDA_50
-            end
-
-            if limite and vidaAtual <= humanoid.MaxHealth * limite and manaAtual >= CUSTO_MANA then
-                ativarCura()
-                task.wait(COOLDOWN)
-            end
-        end
-    end
-end)
 
 -- Loop Speed
 task.spawn(function()
