@@ -297,7 +297,7 @@ task.spawn(function()
                 local char = LocalPlayer.Character
                 local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
-                if hrp and hrp.Position.Y < 15 then
+                if hrp and hrp.Position.Y < -5 then
                     -- 🔥 escolhe posição aleatória
                     local destino = POSICOES_SEGURAS[math.random(1, #POSICOES_SEGURAS)]
 
