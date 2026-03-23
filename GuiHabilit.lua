@@ -237,36 +237,52 @@ local function ativarCura()
 end
 
 -- ==========================================
--- 🔄 LOOP COM TOGGLES (ULTRA RÁPIDO + ESTÁVEL)
+-- 🔄 AUTO HEAL INSTANTÂNEO (SEM DELAY)
 -- ==========================================
 
 local ultimoUso = 0
+local healConnection = nil
 
-task.spawn(function()
-    while task.wait(0.03) do -- 🔥 REFLEXO INSANO
-        if character and humanoid and humanoid.Health > 0 then
-            
-            local vidaAtual = humanoid.Health
-            local manaAtual = obterMana()
-
-            local limite = nil
-
-            if getgenv().Heal70 then
-                limite = 0.7
-            elseif getgenv().Heal50 then
-                limite = 0.5
-            end
-
-            if limite
-            and vidaAtual <= humanoid.MaxHealth * limite
-            and manaAtual >= CUSTO_MANA
-            and tick() - ultimoUso >= COOLDOWN then
-                
-                ultimoUso = tick()
-                ativarCura()
-            end
-        end
+local function conectarAutoHeal(hum)
+    if healConnection then
+        healConnection:Disconnect()
     end
+
+    healConnection = hum.HealthChanged:Connect(function()
+        if not hum or hum.Health <= 0 then return end
+
+        local vidaAtual = hum.Health
+        local manaAtual = obterMana()
+
+        local limite = nil
+
+        if getgenv().Heal70 then
+            limite = 0.7
+        elseif getgenv().Heal50 then
+            limite = 0.5
+        end
+
+        if limite
+        and vidaAtual <= hum.MaxHealth * limite
+        and manaAtual >= CUSTO_MANA
+        and tick() - ultimoUso >= COOLDOWN then
+            
+            ultimoUso = tick()
+            ativarCura()
+        end
+    end)
+end
+
+-- 🔗 CONECTA NO RESPAWN
+if humanoid then
+    conectarAutoHeal(humanoid)
+end
+
+player.CharacterAdded:Connect(function(char)
+    atualizarTudo(char)
+
+    local hum = char:WaitForChild("Humanoid")
+    conectarAutoHeal(hum)
 end)
 
 -- Loop Speed
