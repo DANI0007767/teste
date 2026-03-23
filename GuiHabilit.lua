@@ -114,8 +114,7 @@ end)
 -- 🧠 SISTEMA DE CURA BASE (INTEGRADO)
 -- ==========================================
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local player = game.Players.LocalPlayer
 
 local LIMITE_VIDA_70 = 0.7
 local LIMITE_VIDA_50 = 0.5
@@ -223,16 +222,7 @@ local function dispararQ()
 end
 
 -- ==========================================
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
-            local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
-            if onScreen then
-                local dist = (Vector2.new(pos.X, pos.Y) - (Camera.ViewportSize/2)).Magnitude
-                if dist < shortestDist then target = p.Character.HumanoidRootPart shortestDist = dist end
-            end
-        end
-    end
-    if target then
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+-- 🔄 LOOPS DE SISTEMA
 -- ==========================================
 
 task.spawn(function()
