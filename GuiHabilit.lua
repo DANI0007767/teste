@@ -20,7 +20,8 @@ Toggle.MouseButton1Click:Connect(function() Library:ToggleUI() end)
 -- Variáveis globais de controle
 getgenv().HitboxSize = 15
 getgenv().HitboxStatus = false
-getgenv().HitboxColor = Color3.fromRGB(0, 0, 0)
+getgenv().HitboxColor = "Really black"
+getgenv().HitboxTransparency = 0.9
 getgenv().AntiVoid = false
 getgenv().SpeedEnabled = false
 getgenv().TargetSpeed = 20
@@ -42,31 +43,45 @@ local MagoTab = Window:Tab("Mago", "rbxassetid://10888331510")
 -- ==========================================
 MainTab:Section("Combate & Segurança")
 MainTab:TextBox("Hitbox Size", function(v) getgenv().HitboxSize = tonumber(v) end)
-MainTab:TextBox("Cor do Hitbox (R,G,B)", function(v)
-    local r,g,b = v:match("(%d+),%s*(%d+),%s*(%d+)")
-    if r and g and b then
-        getgenv().HitboxColor = Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b))
-    end
-end)
+MainTab:TextBox("Transparency", function(v) getgenv().HitboxTransparency = tonumber(v) end)
+MainTab:TextBox("Cor do Hitbox", function(v) getgenv().HitboxColor = v end)
 MainTab:Toggle("Ativar HBE", function(state)
     getgenv().HitboxStatus = state
+
     if state then
         task.spawn(function()
             while getgenv().HitboxStatus do
                 for _, p in ipairs(game.Players:GetPlayers()) do
-                    if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    if p ~= game.Players.LocalPlayer then
                         pcall(function()
-                            p.Character.HumanoidRootPart.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                            p.Character.HumanoidRootPart.Transparency = 0.9
-                            p.Character.HumanoidRootPart.CanCollide = false
-                            p.Character.HumanoidRootPart.Material = Enum.Material.Neon
-                            p.Character.HumanoidRootPart.Color = getgenv().HitboxColor
+                            local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                                hrp.Transparency = getgenv().HitboxTransparency
+                                hrp.Material = Enum.Material.Neon
+                                hrp.BrickColor = BrickColor.new(getgenv().HitboxColor)
+                                hrp.CanCollide = false
+                            end
                         end)
                     end
                 end
-                task.wait(0.5)
+                task.wait(0.1)
             end
         end)
+    else
+        -- RESET IGUAL AO ANTIGO
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p ~= game.Players.LocalPlayer then
+                pcall(function()
+                    local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.Size = Vector3.new(2,2,1)
+                        hrp.Transparency = 1
+                        hrp.Material = Enum.Material.Plastic
+                    end
+                end)
+            end
+        end
     end
 end)
 MainTab:Toggle("Ativar Anti Void", function(state) getgenv().AntiVoid = state end)
