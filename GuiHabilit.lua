@@ -20,6 +20,7 @@ Toggle.MouseButton1Click:Connect(function() Library:ToggleUI() end)
 -- Variáveis globais de controle
 getgenv().HitboxSize = 15
 getgenv().HitboxStatus = false
+getgenv().HitboxColor = Color3.fromRGB(0, 0, 0)
 getgenv().AntiVoid = false
 getgenv().SpeedEnabled = false
 getgenv().TargetSpeed = 20
@@ -41,6 +42,12 @@ local MagoTab = Window:Tab("Mago", "rbxassetid://10888331510")
 -- ==========================================
 MainTab:Section("Combate & Segurança")
 MainTab:TextBox("Hitbox Size", function(v) getgenv().HitboxSize = tonumber(v) end)
+MainTab:TextBox("Cor do Hitbox (R,G,B)", function(v)
+    local r,g,b = v:match("(%d+),%s*(%d+),%s*(%d+)")
+    if r and g and b then
+        getgenv().HitboxColor = Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b))
+    end
+end)
 MainTab:Toggle("Ativar HBE", function(state)
     getgenv().HitboxStatus = state
     if state then
@@ -52,6 +59,8 @@ MainTab:Toggle("Ativar HBE", function(state)
                             p.Character.HumanoidRootPart.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
                             p.Character.HumanoidRootPart.Transparency = 0.9
                             p.Character.HumanoidRootPart.CanCollide = false
+                            p.Character.HumanoidRootPart.Material = Enum.Material.Neon
+                            p.Character.HumanoidRootPart.Color = getgenv().HitboxColor
                         end)
                     end
                 end
