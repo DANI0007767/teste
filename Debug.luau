@@ -1,81 +1,75 @@
--- MINI GUI DE TESTE (AUTO-MAGO)
-local ScreenGui = Instance.new("ScreenGui")
-local Toggle = Instance.new("TextButton")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-ScreenGui.Parent = game.CoreGui
-Toggle.Parent = ScreenGui
-Toggle.BackgroundColor3 = Color3.fromRGB(80, 0, 200)
-Toggle.Position = UDim2.new(0, 100, 0, 150)
-Toggle.Size = UDim2.new(0, 120, 0, 40)
-Toggle.Text = "Auto-Heal: OFF"
-Toggle.TextColor3 = Color3.new(1,1,1)
-Toggle.Draggable = true
+-- CONFIG
+local LIMITE_VIDA = 0.7
+local CUSTO_MANA = 30
+local COOLDOWN = 1
 
-local Ativado = false
+local character
+local humanoid
+local botaoR
 
--- CONFIGURAÇÃO
-local LIMITE_VIDA_PERCENT = 0.7 -- 70%
-local MANA_MINIMA = 30
+-- Atualiza tudo quando respawnar
+local function atualizarTudo(char)
+    character = char
+    humanoid = char:WaitForChild("Humanoid")
 
-local player = game.Players.LocalPlayer
-
--- FUNÇÃO PARA PEGAR O PRIMEIRO NÚMERO DA BARRA AZUL
-local function checarMana()
-    local mana = 0
-    pcall(function()
-        -- Procura a barra de mana em toda a PlayerGui
-        for _, v in pairs(player.PlayerGui:GetDescendants()) do
-            if v:IsA("TextLabel") and (v.Text:find("Mana") or v.Parent.Name:find("Mana")) then
-                -- Pega o primeiro conjunto de números que aparecer (Ex: "100" de "100/100")
-                local valor = v.Text:match("(%d+)")
-                if valor then
-                    mana = tonumber(valor)
-                end
-            end
-        end
-    end)
-    return mana
+    local abilityGui = player.PlayerGui:WaitForChild("Ability Buttons")
+    botaoR = abilityGui:WaitForChild("R")
 end
 
--- FUNÇÃO PARA USAR A HABILIDADE
-local function usarR()
-    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-                   and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("Ability")
-    
-    if remote then
-        remote:FireServer("R")
+if player.Character then
+    atualizarTudo(player.Character)
+end
+
+player.CharacterAdded:Connect(atualizarTudo)
+
+-- Mana
+local function obterMana()
+    local manaBar = player.PlayerGui:FindFirstChild("ManaBar", true)
+    if manaBar then
+        local texto = manaBar:FindFirstChildOfClass("TextLabel")
+        if texto then
+            return tonumber(texto.Text:match("%d+")) or 0
+        end
+    end
+    return 100
+end
+
+-- SUA FUNÇÃO ORIGINAL (intocada)
+local function ativarCura()
+    print("🪄 Tentando curar...")
+
+    local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+    for _, eventName in pairs(events) do
+        if botaoR and botaoR[eventName] then
+            for _, connection in pairs(getconnections(botaoR[eventName])) do
+                connection:Fire()
+            end
+        end
+    end
+
+    local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+    if remoteFolder then
+        local remote = remoteFolder:FindFirstChild("Ability")
+        if remote then
+            remote:FireServer("R")
+        end
     end
 end
 
--- LOGICA PRINCIPAL
-Toggle.MouseButton1Click:Connect(function()
-    Ativado = not Ativado
-    Toggle.Text = Ativado and "Auto-Heal: ON" or "Auto-Heal: OFF"
-    Toggle.BackgroundColor3 = Ativado and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-end)
+-- Loop
+while task.wait(0.5) do
+    if humanoid and humanoid.Health > 0 then
+        local vidaAtual = humanoid.Health
+        local manaAtual = obterMana()
 
-task.spawn(function()
-    while task.wait(0.5) do
-        if Ativado then
-            local char = player.Character
-            local hum = char and char:FindFirstChild("Humanoid")
+        if vidaAtual <= humanoid.MaxHealth * LIMITE_VIDA
+        and manaAtual >= CUSTO_MANA then
             
-            if hum and hum.Health > 0 then
-                local manaAtual = checarMana()
-                local vidaPercent = hum.Health / hum.MaxHealth
-                
-                -- REGRA DE OURO: Mana em primeiro lugar
-                if manaAtual >= MANA_MINIMA then
-                    -- Se tem mana, verifica a vida
-                    if vidaPercent <= LIMITE_VIDA_PERCENT then
-                        usarR()
-                        task.wait(1) -- Cooldown para não spammar
-                    end
-                else
-                    -- Se tiver menos de 30, ele ignora a vida e não faz nada
-                    print("Mana muito baixa para curar: " .. manaAtual)
-                end
-            end
+            ativarCura()
+            task.wait(COOLDOWN)
         end
     end
-end)
+end
