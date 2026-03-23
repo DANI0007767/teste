@@ -111,6 +111,70 @@ MagoTab:Toggle("Ativar Botão Q (Aimlock)", function(state)
 end)
 
 -- ==========================================
+-- 🧠 SISTEMA DE CURA BASE (INTEGRADO)
+-- ==========================================
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local LIMITE_VIDA_70 = 0.7
+local LIMITE_VIDA_50 = 0.5
+local CUSTO_MANA = 30
+local COOLDOWN = 1
+
+local character
+local humanoid
+local botaoR
+
+-- Atualiza ao respawn
+local function atualizarTudo(char)
+    character = char
+    humanoid = char:WaitForChild("Humanoid")
+
+    local abilityGui = player.PlayerGui:WaitForChild("Ability Buttons")
+    botaoR = abilityGui:WaitForChild("R")
+end
+
+if player.Character then
+    atualizarTudo(player.Character)
+end
+
+player.CharacterAdded:Connect(atualizarTudo)
+
+-- Mana
+local function obterMana()
+    local manaBar = player.PlayerGui:FindFirstChild("ManaBar", true)
+    if manaBar then
+        local texto = manaBar:FindFirstChildOfClass("TextLabel")
+        if texto then
+            return tonumber(texto.Text:match("%d+")) or 0
+        end
+    end
+    return 0
+end
+
+-- Cura (ORIGINAL)
+local function ativarCura()
+    local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+
+    for _, eventName in pairs(events) do
+        if botaoR and botaoR[eventName] then
+            for _, connection in pairs(getconnections(botaoR[eventName])) do
+                connection:Fire()
+            end
+        end
+    end
+
+    local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+    if remoteFolder then
+        local remote = remoteFolder:FindFirstChild("Ability")
+        if remote then
+            remote:FireServer("R")
+        end
+    end
+end
+
+-- ==========================================
 -- ❄️ FUNÇÕES DO AIM-LOCK
 -- ==========================================
 
@@ -159,38 +223,6 @@ local function dispararQ()
 end
 
 -- ==========================================
--- 🛠️ FUNÇÕES TÉCNICAS (BACKEND)
--- ==========================================
-
-local function obterMana()
-    local manaBar = LocalPlayer.PlayerGui:FindFirstChild("ManaBar", true)
-    if manaBar then
-        local texto = manaBar:FindFirstChildOfClass("TextLabel")
-        if texto then return tonumber(texto.Text:match("%d+")) or 0 end
-    end
-    return 0
-end
-
-local function ativarCura()
-    local abilityGui = LocalPlayer.PlayerGui:FindFirstChild("Ability Buttons", true)
-    local botaoR = abilityGui and abilityGui:FindFirstChild("R")
-
-    if botaoR then
-        local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
-        for _, eventName in pairs(events) do
-            if botaoR[eventName] then
-                for _, connection in pairs(getconnections(botaoR[eventName])) do connection:Fire() end
-            end
-        end
-    end
-    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("Ability")
-    if remote then remote:FireServer("R") end
-end
-
-local function dispararQ()
-    local target = nil
-    local shortestDist = math.huge
-    for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
             local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
             if onScreen then
@@ -201,29 +233,25 @@ local function dispararQ()
     end
     if target then
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("Ability")
-        if remote then remote:FireServer("Q") end
-    end
-end
-
--- ==========================================
--- 🔄 LOOPS DE SISTEMA
 -- ==========================================
 
--- Loop Único de Cura (Checa 70% ou 50%)
 task.spawn(function()
     while task.wait(0.3) do
-        local char = LocalPlayer.Character
-        local hum = char and char:FindFirstChild("Humanoid")
-        
-        if hum and hum.Health > 0 then
-            local mana = obterMana()
-            local vidaPercent = hum.Health / hum.MaxHealth
+        if humanoid and humanoid.Health > 0 then
+            local vidaAtual = humanoid.Health
+            local manaAtual = obterMana()
 
-            if getgenv().Heal70 and vidaPercent <= 0.7 then
-                if mana >= 30 then ativarCura() task.wait(1) end
-            elseif getgenv().Heal50 and vidaPercent <= 0.5 then
-                if mana >= 30 then ativarCura() task.wait(1) end
+            local limite = nil
+
+            if getgenv().Heal70 then
+                limite = LIMITE_VIDA_70
+            elseif getgenv().Heal50 then
+                limite = LIMITE_VIDA_50
+            end
+
+            if limite and vidaAtual <= humanoid.MaxHealth * limite and manaAtual >= CUSTO_MANA then
+                ativarCura()
+                task.wait(COOLDOWN)
             end
         end
     end
