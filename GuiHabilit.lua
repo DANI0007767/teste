@@ -258,74 +258,43 @@ local function getClosestPlayer()
                     shortestDistance = distance
                 end
             end
+        end
+    end
+    return target
+end
 
-                -- EXECUTA A LÓGICA ORIGINAL
-                if limite 
-                and vidaAtual <= humanoid.MaxHealth * limite
-                and manaAtual >= CUSTO_MANA then
-                    
-                    ativarCura()
-                    task.wait(COOLDOWN)
+local function dispararQ()
+    local alvo = getClosestPlayer()
+    if not alvo then return end
+
+    local oldCFrame = Camera.CFrame
+
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvo.Position)
+    task.wait(0.05)
+
+    local abilityGui = LocalPlayer.PlayerGui:FindFirstChild("Ability Buttons", true)
+    local botaoQ = abilityGui and abilityGui:FindFirstChild("Q", true)
+
+    if botaoQ then
+        local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
+        for _, eventName in pairs(events) do
+            if botaoQ[eventName] then
+                for _, connection in pairs(getconnections(botaoQ[eventName])) do
+                    connection:Fire()
                 end
             end
         end
-    end)
-
-    -- ==========================================
-    -- ❄️ FUNÇÕES DO AIM-LOCK
-    -- ==========================================
-
-    local function getClosestPlayer()
-        local target = nil
-        local shortestDistance = math.huge
-        local mousePos = Camera.ViewportSize / 2
-
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
-                local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
-                if onScreen then
-                    local distance = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                    if distance < shortestDistance then
-                        target = p.Character.HumanoidRootPart
-                        shortestDistance = distance
-                    end
-                end
-            end
-        end
-        return target
     end
 
-    local function dispararQ()
-        local alvo = getClosestPlayer()
-        if not alvo then return end
+    local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+    if remoteFolder and remoteFolder:FindFirstChild("Ability") then
+        remoteFolder.Ability:FireServer("Q")
+    end
 
-        local oldCFrame = Camera.CFrame
+    task.wait(0.05)
+    Camera.CFrame = oldCFrame
+end
 
-        -- trava rápido no alvo
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvo.Position)
-
-        -- pequena espera pra registrar (IMPORTANTE)
-        task.wait(0.05)
-
-        -- ativa Q igual cura
-        local abilityGui = LocalPlayer.PlayerGui:FindFirstChild("Ability Buttons", true)
-        local botaoQ = abilityGui and abilityGui:FindFirstChild("Q", true)
-
-        if botaoQ then
-            local events = {"MouseButton1Click", "MouseButton1Down", "Activated"}
-            for _, eventName in pairs(events) do
-                if botaoQ[eventName] then
-                    for _, connection in pairs(getconnections(botaoQ[eventName])) do
-                        connection:Fire()
-                    end
-                end
-            end
-        end
-
-        -- remote (backup)
-        local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
-        if remoteFolder and remoteFolder:FindFirstChild("Ability") then
-            remoteFolder.Ability:FireServer("Q")
 -- Loop Speed
 task.spawn(function()
     while task.wait(0.4) do
