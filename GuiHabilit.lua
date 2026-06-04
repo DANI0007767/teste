@@ -18,7 +18,7 @@ Toggle.Draggable = true
 Toggle.MouseButton1Click:Connect(function() Library:ToggleUI() end)
 
 -- Variáveis globais de controle
-getgenv().HitboxSize = 15
+getgenv().HitboxSize = 4
 getgenv().HitboxStatus = false
 getgenv().HitboxColor = "Really black"
 getgenv().HitboxTransparency = 0.9
@@ -61,12 +61,11 @@ MainTab:Toggle("Ativar HBE", function(state)
                                 hrp.Transparency = getgenv().HitboxTransparency
                                 hrp.Material = Enum.Material.Neon
                                 hrp.BrickColor = BrickColor.new(getgenv().HitboxColor)
-                                hrp.CanCollide = false
                             end
                         end)
                     end
                 end
-                task.wait(0.1)
+                task.wait(0.05)
             end
         end)
     else
@@ -181,6 +180,7 @@ local botaoR
 -- Atualiza ao respawn (IGUAL AO SEU)
 local function atualizarTudo(char)
     character = char
+    
     humanoid = char:WaitForChild("Humanoid")
 
     local abilityGui = player.PlayerGui:FindFirstChild("Ability Buttons", true)
@@ -307,7 +307,7 @@ local POSICOES_SEGURAS = {
 }
 
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.05) do
         if getgenv().AntiVoid then
             pcall(function()
                 local char = LocalPlayer.Character
