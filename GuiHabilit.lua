@@ -55,12 +55,30 @@ MainTab:Toggle("Ativar HBE", function(state)
                 for _, p in ipairs(game.Players:GetPlayers()) do
                     if p ~= game.Players.LocalPlayer then
                         pcall(function()
-                            local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+                            local char = p.Character
+                            if not char then return end
+
+                            local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+                            local head  = char:FindFirstChild("Head")
+                            local hrp   = char:FindFirstChild("HumanoidRootPart")
+
+                            local s = getgenv().HitboxSize
+
+                            if torso then
+                                torso.Size = Vector3.new(s, s, s)
+                                torso.Transparency = getgenv().HitboxTransparency
+                                torso.Material = Enum.Material.Neon
+                                torso.BrickColor = BrickColor.new(getgenv().HitboxColor)
+                            end
+                            if head then
+                                head.Size = Vector3.new(s, s, s)
+                                head.Transparency = getgenv().HitboxTransparency
+                                head.Material = Enum.Material.Neon
+                                head.BrickColor = BrickColor.new(getgenv().HitboxColor)
+                            end
                             if hrp then
-                                hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                                hrp.Size = Vector3.new(s, s, s)
                                 hrp.Transparency = getgenv().HitboxTransparency
-                                hrp.Material = Enum.Material.Neon
-                                hrp.BrickColor = BrickColor.new(getgenv().HitboxColor)
                             end
                         end)
                     end
@@ -69,16 +87,17 @@ MainTab:Toggle("Ativar HBE", function(state)
             end
         end)
     else
-        -- RESET IGUAL AO ANTIGO
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= game.Players.LocalPlayer then
                 pcall(function()
-                    local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.Size = Vector3.new(2,2,1)
-                        hrp.Transparency = 1
-                        hrp.Material = Enum.Material.Plastic
-                    end
+                    local char = p.Character
+                    if not char then return end
+                    local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+                    local head  = char:FindFirstChild("Head")
+                    local hrp   = char:FindFirstChild("HumanoidRootPart")
+                    if torso then torso.Size = Vector3.new(2,2,1); torso.Transparency = 0 end
+                    if head  then head.Size  = Vector3.new(2,1,1); head.Transparency  = 0 end
+                    if hrp   then hrp.Size   = Vector3.new(2,2,1); hrp.Transparency   = 1 end
                 end)
             end
         end
